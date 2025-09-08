@@ -1,0 +1,46 @@
+ /* Navbar fix */
+    .navbar { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+    /* Banner carousel */
+    .carousel-item img {
+      height: 800px;
+      object-fit: cover;
+    }
+    .carousel-caption {
+      background: rgba(0,0,0,0.5);
+      border-radius: 10px;
+    }
+
+    /* Product card */
+    .product-card { transition: transform 0.3s, box-shadow 0.3s; }
+    .product-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+    .product-img {
+      height: 220px;
+      object-fit: cover;
+    }
+
+    /* Footer */
+    .footer { background:#222; color:#bbb; }
+    .footer a { color:#bbb; text-decoration:none; }
+    .footer a:hover { color:#fff; }
+
+
+    h2 {
+  font-size: 32px;
+  font-weight: bold;
+  text-transform: uppercase;
+  line-height: 1.2;
+  font-family: 'Roboto', Arial, sans-serif;
+}
+
+h2 span {
+  vertical-align: baseline;
+}
+
+#dynamic {
+  vertical-align: baseline;
+  line-height: 1;
+}
