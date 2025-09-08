@@ -4,39 +4,65 @@ include("../configs/db.php");
 
 // Lấy type từ URL
 $type = $_GET['type'] ?? '';
+$category_id = $_GET['category_id'] ?? 0;
 
 $categoryMap = [
-    'balo'      => ['id' => 5, 'name' => 'Balo'],
-    'charm'     => ['id' => 6, 'name' => 'Charm'],
-    'daygiay'   => ['id' => 7, 'name' => 'Dây giày'],
-    'lotde'     => ['id' => 8, 'name' => 'Lót đế'],
-    'gaubong'   => ['id' => 9, 'name' => 'Gấu bông'],
-    'xitkhumui' => ['id' => 10, 'name' => 'Xịt khử mùi']
+    'balo'      => ['name' => 'Balo'],
+    'charm'     => ['name' => 'Charm'],
+    'daygiay'   => ['name' => 'Dây giày'],
+    'lotde'     => ['name' => 'Lót đế'],
+    'gaubong'   => ['name' => 'Gấu bông'],
+    'xitkhumui' => ['name' => 'Xịt khử mùi']
 ];
 
 if (!array_key_exists($type, $categoryMap)) {
-    echo "❌ Danh mục không hợp lệ!";
-    exit;
+    $keys = array_keys($categoryMap);
+    $type = $keys[array_rand($keys)];
 }
 
-$category_id = $categoryMap[$type];
-$category_id = $categoryMap[$type]['id'];
+$catName = '';
 
-// Lấy tên danh mục
-$catName = ucfirst($type);
-$catName     = $categoryMap[$type]['name'];
+$where = "WHERE 1";
+if ($category_id) {
+    $where .= " AND p.category_id = " . intval($category_id);
+} else {
+    $catName = $categoryMap[$type]['name'];
+    if ($catName) {
+        $where .= " AND c.name LIKE '%" . $conn->real_escape_string($catName) . "%'";
+    }
+}
 
-// Query sản phẩm
-$stmt = $conn->prepare("SELECT * FROM products WHERE category_id = ?");
-$stmt->bind_param("i", $category_id);
-$stmt->execute();
-$result = $stmt->get_result();
+// Nhận tham số trang
+$limit = 8; // số sản phẩm / trang
+$page  = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$offset = ($page - 1) * $limit;
+
+// Đếm tổng số sản phẩm
+$count_sql = "SELECT COUNT(*) as total 
+              FROM products p 
+              JOIN categories c ON p.category_id = c.id 
+              $where";
+$count_result = $conn->query($count_sql);
+$total = $count_result->fetch_assoc()['total'];
+$total_pages = ceil($total / $limit);
+
+// Truy vấn sản phẩm có phân trang
+$sql = "SELECT p.*, c.id AS cat_id
+        FROM products p 
+        JOIN categories c ON p.category_id = c.id 
+        $where
+        ORDER BY p.created_at DESC 
+        LIMIT $limit OFFSET $offset";
+
+$products = $conn->query($sql);
+
 ?>
 <!DOCTYPE html>
 <html lang="vi">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Phụ kiện - Shoe Store</title>
     <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -55,35 +81,11 @@ $result = $stmt->get_result();
             🛍️ Phụ kiện: <span class="text-primary"><?= htmlspecialchars($catName) ?></span>
         </h2>
 
-        <div class="row g-4">
-            <?php if ($result && $result->num_rows > 0): ?>
-                <?php while ($p = $result->fetch_assoc()): ?>
-                    <div class="col-md-4 col-lg-3">
-                        <div class="card h-100 shadow-sm border-0">
-                            <img src="<?= $p['image'] ?>" class="card-img-top" style="height:200px;object-fit:cover;"
-                                alt="<?= htmlspecialchars($p['name']) ?>">
-                            <div class="card-body d-flex flex-column">
-                                <h6 class="card-title"><?= htmlspecialchars($p['name']) ?></h6>
-                                <p class="fw-bold text-danger mb-2">
-                                    <?= number_format($p['price'], 0, ',', '.') ?> VND
-                                </p>
-                                <p class="text-muted small mb-3"><?= htmlspecialchars($p['description']) ?></p>
-                                <a href="product_detail.php?id=<?= $p['id'] ?>" class="btn btn-outline-primary btn-sm mb-2">
-                                    <i class="bi bi-eye"></i> Xem chi tiết
-                                </a>
-                                <a href="cart_add.php?id=<?= $p['id'] ?>" class="btn btn-success btn-sm mt-auto">
-                                    <i class="bi bi-cart-plus"></i> Thêm giỏ hàng
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <div class="col-12">
-                    <div class="alert alert-info text-center">Không có sản phẩm nào trong danh mục này.</div>
-                </div>
-            <?php endif; ?>
-        </div>
+        <!-- Danh sách sản phẩm -->
+        <?php include("../includes/product_item.php"); ?>
+
+        <!-- Phân trang -->
+        <?php include("../includes/pagination.php"); ?>
     </div>
 
     <?php include("../layout/footer.php"); ?>

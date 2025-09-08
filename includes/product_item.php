@@ -1,0 +1,46 @@
+<div class="row">
+    <?php if ($products && $products->num_rows > 0): ?>
+        <?php while ($row = $products->fetch_assoc()): ?>
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <a href="./product_detail.php?id=<?= $row['id'] ?>">
+                        <img src="<?= htmlspecialchars($row['image']) ?>" class="card-img-top"
+                            alt="<?= htmlspecialchars($row['name']) ?>" style="height:200px; object-fit:cover;"
+                            onerror="this.src='../uploads/default-shoe.jpg';">
+                    </a>
+                    <div class="card-body d-flex flex-column">
+                        <div class="product-texts">
+                            <a href="./product_detail.php?id=<?= $row['id'] ?>"
+                                class="card-title text-link"><?= htmlspecialchars($row['name']) ?></a>
+                            <?php if (isset($row['cat_name'])): ?>
+                                <div>
+                                    <span class="badge bg-secondary small">
+                                        <?= htmlspecialchars($row['cat_name']) ?>
+                                    </span>
+                                </div>
+                            <?php endif; ?>
+                            <?php if (isset($row['description'])): ?>
+                                <span class="card-text product-description">
+                                    <?= htmlspecialchars($row['description']) ?>
+                                </span>
+                            <?php endif; ?>
+                            <span class="card-text text-danger fw-bold">
+                                <?= number_format($row['price'], 0, ',', '.') ?> VND
+                            </span>
+                        </div>
+                        <div class="mt-auto d-flex justify-content-between">
+                            <a href="./product_detail.php?id=<?= $row['id'] ?>" class="btn btn-outline-primary">
+                                <i class="fa-solid fa-bag-shopping"></i> Mua ngay
+                            </a>
+                            <a href="./cart.php?add=<?= $row['id'] ?>" class="btn btn-outline-success">
+                                <i class="fas fa-cart-plus"></i> Thêm giỏ
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endwhile; ?>
+    <?php else: ?>
+        <div class="alert alert-info">Không tìm thấy sản phẩm nào.</div>
+    <?php endif; ?>
+</div>

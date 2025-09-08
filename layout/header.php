@@ -14,6 +14,7 @@ $cart_count = 0;
 if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
     foreach ($_SESSION['cart'] as $q) $cart_count += (int)$q;
 }
+$current_page = basename($_SERVER['PHP_SELF']);
 ?>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow-sm" style="z-index:3000;">
     <div class="container">
@@ -31,12 +32,18 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 
                 <li class="nav-item">
-                    <a class="nav-link" href="<?= $base_url ?>/pages/products.php">Tất cả sản phẩm</a>
+                    <a class="nav-link <?= (in_array($current_page, ['products.php'])) ? 'active' : '' ?>"
+                        href="<?= $base_url ?>/pages/products.php">
+                        <span>Tất cả sản phẩm</span>
+                    </a>
                 </li>
 
                 <!-- Nam -->
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Nam</a>
+                    <a class="nav-link dropdown-toggle <?= (in_array($current_page, ['men.php'])) ? 'active' : '' ?>"
+                        href="#" role="button" data-bs-toggle="dropdown">
+                        <span>Nam</span>
+                    </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="<?= $base_url ?>/pages/men.php?type=giaytay">Giầy tây</a>
                         </li>
@@ -50,7 +57,10 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
 
                 <!-- Nữ -->
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Nữ</a>
+                    <a class="nav-link dropdown-toggle <?= (in_array($current_page, ['women.php'])) ? 'active' : '' ?>"
+                        href="#" role="button" data-bs-toggle="dropdown">
+                        <span>Nữ</span>
+                    </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="<?= $base_url ?>/pages/women.php?type=giaycaogot">Giầy
                                 cao gót</a></li>
@@ -70,8 +80,9 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
 
                 <!-- Phụ kiện -->
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        Phụ kiện
+                    <a class="nav-link dropdown-toggle <?= (in_array($current_page, ['phukien.php'])) ? 'active' : '' ?>"
+                        href="#" role="button" data-bs-toggle="dropdown">
+                        <span>Phụ kiện</span>
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="<?= $base_url ?>/pages/phukien.php?type=balo">Balo</a>
@@ -90,8 +101,18 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
                 </li>
 
                 <!-- Giới thiệu + Liên hệ -->
-                <li class="nav-item"><a class="nav-link" href="<?= $base_url ?>/pages/about.php">Giới thiệu</a></li>
-                <li class="nav-item"><a class="nav-link" href="<?= $base_url ?>/pages/contact.php">Liên hệ</a></li>
+                <li class="nav-item">
+                    <a class="nav-link <?= (in_array($current_page, ['about.php'])) ? 'active' : '' ?>"
+                        href="<?= $base_url ?>/pages/about.php">
+                        <span>Giới thiệu</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= (in_array($current_page, ['contact.php'])) ? 'active' : '' ?>"
+                        href="<?= $base_url ?>/pages/contact.php">
+                        <span>Liên hệ</span>
+                    </a>
+                </li>
             </ul>
 
             <!-- Bộ lọc sản phẩm -->
@@ -164,14 +185,14 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
             <!-- Dropdown tài khoản -->
             <ul class="navbar-nav">
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="accountDropdown" role="button"
-                        data-bs-toggle="dropdown" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle" id="accountDropdown" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
                         <i class="fas fa-user"></i> <?= htmlspecialchars($display_name) ?>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
                         <?php if (isset($_SESSION['username'])): ?>
                             <li>
-                                <a class="dropdown-item" href="<?= $base_url ?>/pages/profile.php">
+                                <a class="dropdown-item" href="<?= $base_url ?>/account/profile.php">
                                     Thông tin cá nhân
                                 </a>
                             </li>
@@ -191,7 +212,7 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
                                 </li>
                             <?php endif; ?>
                             <li>
-                                <a class="dropdown-item" href="<?= $base_url ?>/pages/logout.php">
+                                <a class="dropdown-item" href="<?= $base_url ?>/account/logout.php">
                                     Đăng xuất
                                 </a>
                             </li>

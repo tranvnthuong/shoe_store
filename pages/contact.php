@@ -30,19 +30,21 @@ if (isset($_POST['submit'])) {
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Liên hệ - Shoe Store</title>
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+  <link href="../assets/css/style.css" rel="stylesheet">
 </head>
 
 <body>
   <?php include("../layout/header.php"); ?>
 
-
-  <?php include("../layout/header.php"); ?>
-
-
-  <div class="container my-5">
+  <div class="container" style="padding-top: 80px;">
     <h2>📞 Liên hệ với chúng tôi</h2>
     <p>Nếu bạn có thắc mắc, hãy để lại thông tin hoặc ghé trực tiếp cửa hàng.</p>
 
@@ -77,11 +79,7 @@ if (isset($_POST['submit'])) {
         <div class="map-responsive">
           <iframe
             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.502046947835!2d106.7004232153349!3d10.7768890621226!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f3f5ad3a2fb%3A0xf48a3c9afcd0a06!2zQ2hpIMSQ4bqhaSBIb8OgbmcgVMOyYSBQaOG6p24!5e0!3m2!1svi!2s!4v1675242941234!5m2!1svi!2s"
-            width="100%"
-            height="350"
-            style="border:0;"
-            allowfullscreen=""
-            loading="lazy"
+            width="100%" height="350" style="border:0;" allowfullscreen="" loading="lazy"
             referrerpolicy="no-referrer-when-downgrade">
           </iframe>
         </div>

@@ -74,7 +74,7 @@ $revenues = [12000000, 11000000, 19000000, 14000000, 20000000, 25000000, 2300000
           <a href="manage_orders.php"><i class="bi bi-cart-check"></i> Quản lý đơn hàng</a>
           <a href="manage_categories.php"><i class="bi bi-list-ul"></i> Quản lý danh mục</a>
           <a href="manage_brands.php"><i class="bi bi-tags"></i> Quản lý thương hiệu</a>
-          <a href="../pages/logout.php" class="text-danger"><i class="bi bi-door-closed"></i> Đăng xuất</a>
+          <a href="../account/logout.php" class="text-danger"><i class="bi bi-door-closed"></i> Đăng xuất</a>
         </div>
       </nav>
 

@@ -11,7 +11,7 @@ $limit = 8; // số sản phẩm / trang
 $page  = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $offset = ($page - 1) * $limit;
 
-// Truy vấn danh mục
+// Truy vấn danh mục cho dropdown
 $cats = $conn->query("SELECT * FROM categories");
 
 // Điều kiện WHERE
@@ -47,6 +47,7 @@ $products = $conn->query($sql);
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Sản phẩm</title>
     <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -88,93 +89,10 @@ $products = $conn->query($sql);
         </form>
 
         <!-- Danh sách sản phẩm -->
-        <div class="row">
-            <?php if ($products && $products->num_rows > 0): ?>
-                <?php while ($row = $products->fetch_assoc()): ?>
-                    <div class="col-md-3 mb-4">
-                        <div class="card h-100 shadow-sm">
-                            <a href="./product_detail.php?id=<?= $row['id'] ?>">
-                                <img src="<?= htmlspecialchars($row['image']) ?>" class="card-img-top"
-                                    alt="<?= htmlspecialchars($row['name']) ?>" style="height:200px; object-fit:cover;"
-                                    onerror="this.src='../uploads/default-shoe.jpg';">
-                            </a>
-                            <div class="card-body d-flex flex-column">
-                                <a href="./product_detail.php?id=<?= $row['id'] ?>"
-                                    class="card-title product-title"><?= htmlspecialchars($row['name']) ?></a>
-                                <p class="text-muted small"><?= htmlspecialchars($row['cat_name']) ?></p>
-                                <?php if (isset($row['description'])): ?>
-                                    <p class="card-text product-description">
-                                        <?= htmlspecialchars($row['description']) ?>
-                                    </p>
-                                <?php endif; ?>
-                                <p class="card-text text-danger fw-bold">
-                                    <?= number_format($row['price'], 0, ',', '.') ?> VND
-                                </p>
-                                <div class="mt-auto d-flex justify-content-between">
-                                    <a href="./product_detail.php?id=<?= $row['id'] ?>" class="btn btn-outline-primary">
-                                        <i class="fa-solid fa-bag-shopping"></i> Mua ngay
-                                    </a>
-                                    <a href="./cart.php?add=<?= $row['id'] ?>" class="btn btn-outline-success">
-                                        <i class="fas fa-cart-plus"></i> Thêm giỏ
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <div class="alert alert-info">Không tìm thấy sản phẩm nào.</div>
-            <?php endif; ?>
-        </div>
+        <?php include("../includes/product_item.php"); ?>
 
         <!-- Phân trang -->
-        <?php if ($total_pages > 1): ?>
-            <nav style="overflow: auto;">
-                <ul class="pagination justify-content-center">
-                    <!-- Nút First page -->
-                    <?php if (isset($_GET['page']) && $_GET['page'] != 1): ?>
-                        <li class="page-item">
-                            <a class="page-link" href="?q=<?= urlencode($keyword) ?>&category_id=<?= $category_id ?>&page=1">
-                                <i class="fa-solid fa-angles-left"></i>
-                            </a>
-                        </li>
-                    <?php endif; ?>
-                    <!-- Nút Previous -->
-                    <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-                        <a class="page-link"
-                            href="?q=<?= urlencode($keyword) ?>&category_id=<?= $category_id ?>&page=<?= max(1, $page - 1) ?>">
-                            <i class="fa-solid fa-angle-left"></i>
-                        </a>
-                    </li>
-                    <!-- Các số trang -->
-                    <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                        <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
-                            <a class="page-link"
-                                href="?q=<?= urlencode($keyword) ?>&category_id=<?= $category_id ?>&page=<?= $i ?>">
-                                <?= $i ?>
-                            </a>
-                        </li>
-                    <?php endfor; ?>
-
-                    <!-- Nút Next -->
-                    <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
-                        <a class="page-link"
-                            href="?q=<?= urlencode($keyword) ?>&category_id=<?= $category_id ?>&page=<?= min($total_pages, $page + 1) ?>">
-                            <i class="fa-solid fa-angle-right"></i>
-                        </a>
-                    </li>
-                    <!-- Nút Last page -->
-                    <?php if (isset($_GET['page']) && $_GET['page'] != $total_pages): ?>
-                        <li class="page-item">
-                            <a class="page-link"
-                                href="?q=<?= urlencode($keyword) ?>&category_id=<?= $category_id ?>&page=<?= $total_pages ?>">
-                                <i class="fa-solid fa-angles-right"></i>
-                            </a>
-                        </li>
-                    <?php endif; ?>
-                </ul>
-            </nav>
-        <?php endif; ?>
+        <?php include("../includes/pagination.php"); ?>
 
     </div>
 

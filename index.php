@@ -1,6 +1,6 @@
 <?php
 session_start();
-include("./configs/db.php");
+include("configs/db.php");
 
 $sql = "SELECT * FROM products 
         WHERE category_id
@@ -41,7 +41,7 @@ $result = $conn->query($sql);
 <body>
 
     <?php include("layout/header.php") ?>
-    <div class="container my-5">
+    <div class="container" style="padding-top: 80px;">
         <!-- Banner Carousel -->
         <div id="bannerCarousel" class="carousel slide" data-bs-ride="carousel">
             <div class="carousel-indicators">
@@ -103,7 +103,7 @@ $result = $conn->query($sql);
             <?php while ($row = $result->fetch_assoc()): ?>
                 <div class="col-md-3 col-sm-6">
                     <div class="card h-100 shadow-sm">
-                        <a href="./product_detail.php?id=<?= $row['id'] ?>">
+                        <a href="./pages/product_detail.php?id=<?= $row['id'] ?>">
                             <img src="<?= htmlspecialchars($row['image']) ?>" class="card-img-top"
                                 alt="<?= htmlspecialchars($row['name']) ?>" style="height:200px; object-fit:cover;"
                                 onerror="this.src='./uploads/default-shoe.jpg';">
@@ -111,7 +111,7 @@ $result = $conn->query($sql);
 
                         <div class=" card-body d-flex flex-column">
                             <a href="./pages/product_detail.php?id=<?= $row['id'] ?>"
-                                class="card-title product-title"><?= htmlspecialchars($row['name']) ?></a>
+                                class="card-title text-link"><?= htmlspecialchars($row['name']) ?></a>
                             <?php if (isset($row['description'])): ?>
                                 <p class="card-text product-description">
                                     <?= htmlspecialchars($row['description']) ?>
