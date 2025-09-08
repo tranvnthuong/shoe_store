@@ -17,7 +17,7 @@
 <body>
   <?php include("../layout/header.php"); ?>
 
-  <div class="container" style="padding-top: 80px;">
+  <div class="container" style="padding-top: 15px;">
     <!-- Hero Section -->
     <section class="hero text-white text-center d-flex align-items-center justify-content-center"
       style="background: url('../assets/images/banner.jpg') center/cover; height: 60vh; margin-top: 60px;">
