@@ -3,7 +3,7 @@ session_start();
 
 // Kiểm tra quyền admin
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') {
-  header("Location: ../account/login.php");
+  header("Location: ../index.php");
   exit;
 }
 
@@ -16,71 +16,24 @@ $revenues = [12000000, 11000000, 19000000, 14000000, 20000000, 25000000, 2300000
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Admin Dashboard</title>
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link href="../assets/css/style.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: "Segoe UI", sans-serif;
-    }
-
-    .sidebar {
-      height: 100vh;
-      background: #343a40;
-      color: #fff;
-    }
-
-    .sidebar a {
-      color: #ddd;
-      text-decoration: none;
-      display: block;
-      padding: 12px 20px;
-    }
-
-    .sidebar a:hover {
-      background: #495057;
-      color: #fff;
-    }
-
-    .sidebar .active {
-      background: #0d6efd;
-      color: #fff;
-    }
-
-    .content {
-      padding: 20px;
-    }
-
-    .card-icon {
-      font-size: 2.5rem;
-      color: #0d6efd;
-    }
-  </style>
 </head>
 
 <body>
   <div class="container-fluid">
     <div class="row">
-      <!-- Sidebar -->
-      <nav class="col-md-2 d-none d-md-block sidebar">
-        <div class="p-3">
-          <h4 class="text-white">⚙️ Admin</h4>
-          <p>Xin chào <b><?= $_SESSION['full_name'] ?></b></p>
-          <hr>
-          <a href="dashboard.php" class="active"><i class="bi bi-speedometer2"></i> Dashboard</a>
-          <a href="manage_users.php"><i class="bi bi-people"></i> Quản lý tài khoản</a>
-          <a href="manage_products.php"><i class="bi bi-box-seam"></i> Quản lý sản phẩm</a>
-          <a href="manage_orders.php"><i class="bi bi-cart-check"></i> Quản lý đơn hàng</a>
-          <a href="manage_categories.php"><i class="bi bi-list-ul"></i> Quản lý danh mục</a>
-          <a href="manage_brands.php"><i class="bi bi-tags"></i> Quản lý thương hiệu</a>
-          <a href="../account/logout.php" class="text-danger"><i class="bi bi-door-closed"></i> Đăng xuất</a>
-        </div>
-      </nav>
-
+      <?php include("../layout/admin_header.php") ?>
       <!-- Main Content -->
       <main class="col-md-10 ms-sm-auto col-lg-10 px-md-4 content">
-        <h2 class="my-4">📊 Bảng điều khiển</h2>
+        <h2 class="mb-4">📊 Bảng điều khiển</h2>
 
         <div class="row g-4">
           <div class="col-md-3">

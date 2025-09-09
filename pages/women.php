@@ -7,12 +7,12 @@ $type = $_GET['type'] ?? '';
 $category_id = $_GET['category_id'] ?? 0;
 
 $categoryMap = [
-    'giaycaogot'      => ['name' => 'Giầy Cao Gót'],
-    'giaythethao'     => ['name' => 'Giầy Thể Thao'],
-    'giaychaybodibo'   => ['name' => 'Giầy Chạy Bộ & Đi Bộ'],
-    'giaybupbe'   => ['name' => 'Giầy Búp Bê'],
+    'giaycaogot'      => ['name' => 'Giày cao gót'],
+    'giaythethao'     => ['name' => 'Giày thể thao'],
+    'giaychaybodibo'   => ['name' => 'Giày chạy bộ & đi Bộ'],
+    'giaybupbe'   => ['name' => 'Giày búp bê'],
     'balo'      => ['name' => 'Balo'],
-    'tuixachvi'   => ['name' => 'Túi Xách & Ví']
+    'tuixachvi'   => ['name' => 'Túi xách & Ví']
 ];
 
 

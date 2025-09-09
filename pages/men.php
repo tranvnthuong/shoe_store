@@ -7,8 +7,8 @@ $type = $_GET['type'] ?? '';
 $category_id = $_GET['category_id'] ?? 0;
 
 $categoryMap = [
-    'giaytay'      => ['name' => 'Giầy tây'],
-    'giaythethao'     => ['name' => 'Giầy thể thao'],
+    'giaytay'      => ['name' => 'Giày tây'],
+    'giaythethao'     => ['name' => 'Giày thể thao'],
     'dep'   => ['name' => 'Dép'],
     'balo'      => ['name' => 'Balo']
 ];

@@ -31,13 +31,14 @@ $base_url = "/shoe_store";
             <div class="col-md-4 mb-4">
                 <h5 class="fw-bold">Kết nối với chúng tôi</h5>
                 <div class="d-flex gap-3 mb-3">
-                    <a href="#" class="text-light fs-4"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="text-light fs-4"><i class="bi bi-instagram"></i></a>
-                    <a href="#" class="text-light fs-4"><i class="bi bi-youtube"></i></a>
-                    <a href="#" class="text-light fs-4"><i class="bi bi-twitter"></i></a>
+                    <a href="#" class="text-light fs-4"><i class="fa-brands fa-facebook"></i></a>
+                    <a href="#" class="text-light fs-4"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" class="text-light fs-4"><i class="fa-brands fa-youtube"></i></a>
+                    <a href="#" class="text-light fs-4"><i class="fa-brands fa-twitter"></i></a>
                 </div>
-                <form class="d-flex">
-                    <input type="email" class="form-control form-control-sm me-2" placeholder="Nhập email của bạn...">
+                <form class="d-flex justify-content-center">
+                    <input type="email" class="form-control form-control-sm me-2 px-4 py-2" style="flex-basis: 80%;"
+                        placeholder="Nhập email của bạn...">
                     <button class="btn btn-danger btn-sm">Đăng ký</button>
                 </form>
             </div>

@@ -20,10 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
   // ⚠️ Hiện tại so sánh plain-text, bạn có thể nâng cấp thành password_hash sau
   if ($user && $user['password'] == $password) {
-    $_SESSION['username'] = $user['email'];
+    $_SESSION['email'] = $user['email'];
     $_SESSION['role'] = $user['role']; // admin hoặc user
     $_SESSION['full_name'] = $user['full_name'];
     $_SESSION['day_of_birth'] = $user['day_of_birth'];
+
+    // Lưu vào cookie (httpOnly)
+    setcookie("refresh_token", $jwt, time() + $expiresTime, "/", "", false, true);
     header("Location: ../index.php");
     exit;
   } else {

@@ -62,14 +62,14 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         <span>Nữ</span>
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="<?= $base_url ?>/pages/women.php?type=giaycaogot">Giầy
+                        <li><a class="dropdown-item" href="<?= $base_url ?>/pages/women.php?type=giaycaogot">Giày
                                 cao gót</a></li>
-                        <li><a class="dropdown-item" href="<?= $base_url ?>/pages/women.php?type=giaythethao">Giầy
+                        <li><a class="dropdown-item" href="<?= $base_url ?>/pages/women.php?type=giaythethao">Giày
                                 thể thao</a></li>
-                        <li><a class="dropdown-item" href="<?= $base_url ?>/pages/women.php?type=giaychaybodibo">Giầy
+                        <li><a class="dropdown-item" href="<?= $base_url ?>/pages/women.php?type=giaychaybodibo">Giày
                                 chạy bộ % đi bộ</a>
                         </li>
-                        <li><a class="dropdown-item" href="<?= $base_url ?>/pages/women.php?type=giaybupbe">Giầy búp
+                        <li><a class="dropdown-item" href="<?= $base_url ?>/pages/women.php?type=giaybupbe">Giày búp
                                 bê</a></li>
                         <li><a class="dropdown-item" href="<?= $base_url ?>/pages/phukien.php?type=balo">Balo</a>
                         </li>
@@ -207,7 +207,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                 </li>
                                 <li>
                                     <a class="dropdown-item text-danger" href="<?= $base_url ?>/admin/dashboard.php">
-                                        Quản trị Admin
+                                        Bảng điều khiển
                                     </a>
                                 </li>
                             <?php endif; ?>
