@@ -5,7 +5,7 @@ include("../configs/db.php");
 // Xóa cookie rf nếu có
 setcookie("refresh_token", "", -1, "/", "", false, true);
 $stmt = $conn->prepare("UPDATE users SET refresh_token = NULL WHERE id=?");
-$stmt->bind_param("i", $user['id']);
+$stmt->bind_param("i", $_SESSION['user_id']);
 $stmt->execute();
 
 // Xóa toàn bộ session
