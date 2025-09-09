@@ -51,22 +51,22 @@ $result = $conn->query($sql);
             </div>
 
             <div class="carousel-inner">
-                <div class="carousel-item active" data-bs-interval="4000">
-                    <img src="https://i.pinimg.com/736x/d1/2c/e1/d12ce1614109d74c5d5c9aed04f5630e.jpg">
+                <div class="carousel-item active" data-bs-interval="3700">
+                    <img src="https://i.pinimg.com/1200x/40/ac/3b/40ac3b92b34d7eb257aa2cbe32cebedf.jpg">
                     <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
                         <h1>Chào mừng đến với Shop Giày</h1>
                         <p>Thời trang - Phong cách - Đẳng cấp</p>
                     </div>
                 </div>
-                <div class="carousel-item" data-bs-interval="4000">
-                    <img src="https://i.pinimg.com/736x/99/49/6a/99496a166061ccf01d701a63d5b25c8c.jpg">
+                <div class="carousel-item" data-bs-interval="3700">
+                    <img src="https://i.pinimg.com/1200x/fb/48/87/fb4887b27ae456d6794d01b538f29e07.jpg">
                     <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
                         <h1>Bộ sưu tập mới</h1>
                         <p>Giảm giá 30% hôm nay</p>
                     </div>
                 </div>
-                <div class="carousel-item" data-bs-interval="4000">
-                    <img src="https://i.pinimg.com/736x/9d/70/29/9d70296bd760bd879235eea7d12dcc90.jpg">
+                <div class="carousel-item" data-bs-interval="3700">
+                    <img src="https://i.pinimg.com/1200x/48/1b/d7/481bd7adbec28000b0a5b7538b8ad526.jpg">
                     <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
                         <h1>Phong cách trẻ trung</h1>
                         <p>Mua ngay để nhận ưu đãi</p>

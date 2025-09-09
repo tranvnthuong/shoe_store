@@ -12,7 +12,8 @@ $categoryMap = [
     'daygiay'   => ['name' => 'Dây giày'],
     'lotde'     => ['name' => 'Lót đế'],
     'gaubong'   => ['name' => 'Gấu bông'],
-    'xitkhumui' => ['name' => 'Xịt khử mùi']
+    'xitkhumui' => ['name' => 'Xịt khử mùi'],
+    'tat' => ['name' => 'Tất']
 ];
 
 if (!array_key_exists($type, $categoryMap)) {

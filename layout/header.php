@@ -97,6 +97,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                 bông</a></li>
                         <li><a class="dropdown-item" href="<?= $base_url ?>/pages/phukien.php?type=xitkhumui">Xịt
                                 khử mùi</a></li>
+                        <li><a class="dropdown-item" href="<?= $base_url ?>/pages/phukien.php?type=tat">Tất
+                        </a></li>
                     </ul>
                 </li>
 

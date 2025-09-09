@@ -72,8 +72,6 @@ if (isset($_POST['submit'])) {
       <div class="col-md-6">
         <h5>📍 Địa chỉ cửa hàng</h5>
 
-        <p>123 Đường ABC, Quận XYZ, TP.HCM</p>
-
         <p>123 Đường ABC, Quận XYZ, TP.Bắc Ninh</p>
 
         <div class="map-responsive">
