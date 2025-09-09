@@ -33,13 +33,13 @@ $total = $count_result->fetch_assoc()['total'];
 $total_pages = ceil($total / $limit);
 
 // Truy vấn sản phẩm có phân trang
-$sql = "SELECT p.*, c.name as cat_name 
+$sql = "SELECT p.*, c.name as cat_name, 
+               (SELECT COUNT(*) FROM product_variants v WHERE v.product_id = p.id) as variant_count
         FROM products p 
         JOIN categories c ON p.category_id = c.id 
         $where
         ORDER BY p.created_at DESC 
         LIMIT $limit OFFSET $offset";
-
 $products = $conn->query($sql);
 ?>
 <!DOCTYPE html>

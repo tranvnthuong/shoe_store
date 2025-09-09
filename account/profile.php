@@ -2,23 +2,80 @@
 session_start();
 include("../configs/db.php");
 
-// Lấy username từ session
+// Nếu chưa đăng nhập thì quay về login
 $userId = $_SESSION['user_id'] ?? '';
 if (!$userId) {
     header("Location: login.php");
     exit;
 }
 
-// Lấy thông tin người dùng
-$sql = "SELECT * FROM users WHERE id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $userId);
-$stmt->execute();
-$result = $stmt->get_result();
-$user1 = $result->fetch_assoc();
+// CSRF Token tạo 1 lần theo session
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['csrf_token'];
 
-if (!$user1) {
-    die("Người dùng không tồn tại!");
+$error = "";
+$success = "";
+
+// Cập nhật thông tin cá nhân
+if (isset($_POST['update_profile'])) {
+    if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        die("CSRF token không hợp lệ!");
+    }
+
+    if (empty($_POST['full_name']) || trim($_POST['full_name']) == "") {
+        $error = "Vui lông nhập đầy đủ thống tin cá nhân!";
+    } else {
+
+        $full_name    = $_POST['full_name'];
+        $day_of_birth = $_POST['day_of_birth'] ?? null;
+        $phone        = $_POST['phone'];
+        $address      = $_POST['address'];
+
+        $sql = "UPDATE users SET full_name = ?, day_of_birth = ?, phone = ?, address = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ssssi", $full_name, $day_of_birth, $phone, $address, $userId);
+        $stmt->execute();
+
+        $_SESSION['full_name']    = $full_name;
+        $_SESSION['day_of_birth'] = $day_of_birth;
+        $_SESSION['phone']        = $phone;
+        $_SESSION['address']      = $address;
+
+        $success = "Cập nhật thành công!";
+    }
+}
+
+// Đổi mật khẩu
+if (isset($_POST['change_password'])) {
+    if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        die("CSRF token không hợp lệ!");
+    }
+
+    $current_password = $_POST['current_password'];
+    $new_password     = $_POST['new_password'];
+    $confirm_password = $_POST['confirm_password'];
+
+    $sql = "SELECT password FROM users WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user2 = $result->fetch_assoc();
+
+    if ($user2['password'] !== $current_password) {
+        $error = "Mật khẩu hiện tại không chính xác!";
+    } elseif ($new_password !== $confirm_password) {
+        $error = "Mật khẩu mới không khớp nhau!";
+    } else {
+        $sql = "UPDATE users SET password = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("si", $new_password, $userId);
+        $stmt->execute();
+
+        $success = "Đổi mật khẩu thành công!";
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -41,14 +98,25 @@ if (!$user1) {
 
     <div class="container" style="padding-top: 80px;">
         <h2>Thông tin cá nhân</h2>
-        <div class="card shadow-sm p-3 mb-4">
-            <p><strong>Họ tên:</strong> <?= htmlspecialchars($user1['full_name']); ?></p>
-            <p><strong>Ngày sinh:</strong> <?= $user1['day_of_birth'] ?? "Chưa cập nhật"; ?></p>
-            <p><strong>Email:</strong> <?= htmlspecialchars($user1['email']); ?></p>
-            <p><strong>Số điện thoại:</strong> <?= $user1['phone'] ?? "Chưa cập nhật"; ?></p>
-            <p><strong>Vai trò:</strong> <?= htmlspecialchars($user1['role']); ?></p>
 
-            <!-- Nút chức năng -->
+        <?php if (!empty($error)): ?>
+        <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
+
+        <?php if (!empty($success)): ?>
+        <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
+        <?php endif; ?>
+
+        <div class="card shadow-sm p-3 mb-4">
+            <p><strong>Họ tên:</strong> <?= $_SESSION['full_name']; ?></p>
+            <p><strong>Ngày sinh:</strong> <?= $_SESSION['day_of_birth'] ?? "Chưa cập nhật"; ?></p>
+            <p><strong>Email:</strong> <?= $_SESSION['email']; ?></p>
+            <p><strong>Số dư:</strong> <?= number_format($_SESSION['balance'], 0, ',', '.') ?> VND</p>
+            <p><strong>Số điện thoại:</strong> <?= $_SESSION['phone'] ?? "Chưa cập nhật"; ?></p>
+            <p><strong>Địa chỉ:</strong> <?= $_SESSION['address'] ?? "Chưa cập nhật"; ?></p>
+            <p><strong>Ngày tham gia:</strong> <?= $_SESSION['created_at'] ?? "Chưa cập nhật"; ?></p>
+            <p><strong>Vai trò:</strong> <?= $_SESSION['role']; ?></p>
+
             <div class="d-flex justify-content-center gap-2">
                 <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#updateInfoModal">
                     Cập nhật thông tin
@@ -66,32 +134,34 @@ if (!$user1) {
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form method="post" action="profile_update.php">
+                <form method="post" action="">
+                    <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
+                    <input type="hidden" name="update_profile" value="1">
+
                     <div class="modal-header">
                         <h5 class="modal-title" id="updateInfoModalLabel">Cập nhật thông tin cá nhân</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
                     </div>
                     <div class="modal-body">
-                        <input type="hidden" name="username" value="<?= htmlspecialchars($user1['email']); ?>">
                         <div class="mb-3">
                             <label for="full_name" class="form-label">Họ tên</label>
                             <input type="text" class="form-control" id="full_name" name="full_name"
-                                value="<?= htmlspecialchars($user1['full_name']); ?>" required>
+                                value="<?= $_SESSION['full_name'] ?? ""; ?>" required>
                         </div>
                         <div class="mb-3">
                             <label for="day_of_birth" class="form-label">Ngày sinh</label>
                             <input type="date" class="form-control" id="day_of_birth" name="day_of_birth"
-                                value="<?= $user1['day_of_birth'] ?? ""; ?>">
-                        </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email"
-                                value="<?= htmlspecialchars($user1['email']); ?>" required>
+                                value="<?= $_SESSION['day_of_birth'] ?? ""; ?>">
                         </div>
                         <div class="mb-3">
                             <label for="phone" class="form-label">Số điện thoại</label>
                             <input type="text" class="form-control" id="phone" name="phone"
-                                value="<?= $user1['phone'] ?? ""; ?>" required>
+                                value="<?= $_SESSION['phone'] ?? ""; ?>">
+                        </div>
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Địa chỉ</label>
+                            <input type="text" class="form-control" id="address" name="address"
+                                value="<?= $_SESSION['address'] ?? ""; ?>" required>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -108,13 +178,15 @@ if (!$user1) {
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form method="post" action="change_password.php">
+                <form method="post" action="">
+                    <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
+                    <input type="hidden" name="change_password" value="1">
+
                     <div class="modal-header">
                         <h5 class="modal-title" id="changePasswordModalLabel">Đổi mật khẩu</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
                     </div>
                     <div class="modal-body">
-                        <input type="hidden" name="username" value="<?= htmlspecialchars($user1['email']); ?>">
                         <div class="mb-3">
                             <label for="current_password" class="form-label">Mật khẩu hiện tại</label>
                             <input type="password" class="form-control" id="current_password" name="current_password"

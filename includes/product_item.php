@@ -12,13 +12,19 @@
                         <div class="product-texts">
                             <a href="./product_detail.php?id=<?= $row['id'] ?>"
                                 class="card-title text-link"><?= htmlspecialchars($row['name']) ?></a>
-                            <?php if (isset($row['cat_name'])): ?>
-                                <div>
+                            <div>
+                                <?php if (isset($row['cat_name'])): ?>
                                     <span class="badge bg-secondary small">
                                         <?= htmlspecialchars($row['cat_name']) ?>
                                     </span>
-                                </div>
-                            <?php endif; ?>
+                                <?php endif; ?>
+                                <?php if (isset($row['variant_count']) && $row['variant_count'] > 0): ?>
+                                    <span class="badge bg-info text-dark small">
+                                        <?= $row['variant_count'] ?> phân loại
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+
                             <?php if (isset($row['description'])): ?>
                                 <span class="card-text product-description">
                                     <?= htmlspecialchars($row['description']) ?>
@@ -29,7 +35,7 @@
                             </span>
                         </div>
                         <div class="mt-auto d-flex justify-content-between">
-                            <a href="./product_detail.php?id=<?= $row['id'] ?>" class="btn btn-outline-primary">
+                            <a href="./buy_now.php?id=<?= $row['id'] ?>" class="btn btn-outline-primary">
                                 <i class="fa-solid fa-bag-shopping"></i> Mua ngay
                             </a>
                             <a href="./cart.php?add=<?= $row['id'] ?>" class="btn btn-outline-success">

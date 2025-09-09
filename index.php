@@ -7,6 +7,11 @@ $sql = "SELECT * FROM products
         ORDER BY created_at DESC
         LIMIT 12";
 $result = $conn->query($sql);
+
+include("configs/db.php");
+
+// Lấy tất cả slide từ bảng carousel_home
+$slides = $conn->query("SELECT * FROM carousel_home ORDER BY id DESC");
 ?>
 
 <!DOCTYPE html>
@@ -44,36 +49,35 @@ $result = $conn->query($sql);
     <div class="container" style="padding-top: 80px;">
         <!-- Banner Carousel -->
         <div id="bannerCarousel" class="carousel slide" data-bs-ride="carousel">
+
+            <!-- Indicators -->
             <div class="carousel-indicators">
-                <button type="button" data-bs-target="#bannerCarousel" data-bs-slide-to="0" class="active"></button>
-                <button type="button" data-bs-target="#bannerCarousel" data-bs-slide-to="1"></button>
-                <button type="button" data-bs-target="#bannerCarousel" data-bs-slide-to="2"></button>
+                <?php $i = 0;
+                foreach ($slides as $s): ?>
+                    <button type="button" data-bs-target="#bannerCarousel" data-bs-slide-to="<?= $i ?>"
+                        class="<?= $i == 0 ? 'active' : '' ?>" aria-current="<?= $i == 0 ? 'true' : 'false' ?>"></button>
+                <?php $i++;
+                endforeach; ?>
             </div>
 
+            <!-- Slides -->
             <div class="carousel-inner">
-                <div class="carousel-item active" data-bs-interval="4000">
-                    <img src="https://i.pinimg.com/736x/d1/2c/e1/d12ce1614109d74c5d5c9aed04f5630e.jpg">
-                    <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
-                        <h1>Chào mừng đến với Shop Giày</h1>
-                        <p>Thời trang - Phong cách - Đẳng cấp</p>
+                <?php
+                $i = 0;
+                $slides->data_seek(0); // reset pointer nếu đã foreach ở trên
+                while ($s = $slides->fetch_assoc()): ?>
+                    <div class="carousel-item <?= $i == 0 ? 'active' : '' ?>" data-bs-interval="4000">
+                        <img src="<?= $s['image'] ?>" class="d-block w-100" style="max-height:70vh; object-fit:cover;">
+                        <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
+                            <h1><?= htmlspecialchars($s['title']) ?></h1>
+                            <p><?= htmlspecialchars($s['text']) ?></p>
+                        </div>
                     </div>
-                </div>
-                <div class="carousel-item" data-bs-interval="4000">
-                    <img src="https://i.pinimg.com/736x/99/49/6a/99496a166061ccf01d701a63d5b25c8c.jpg">
-                    <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
-                        <h1>Bộ sưu tập mới</h1>
-                        <p>Giảm giá 30% hôm nay</p>
-                    </div>
-                </div>
-                <div class="carousel-item" data-bs-interval="4000">
-                    <img src="https://i.pinimg.com/736x/9d/70/29/9d70296bd760bd879235eea7d12dcc90.jpg">
-                    <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
-                        <h1>Phong cách trẻ trung</h1>
-                        <p>Mua ngay để nhận ưu đãi</p>
-                    </div>
-                </div>
+                <?php $i++;
+                endwhile; ?>
             </div>
 
+            <!-- Controls -->
             <button class="carousel-control-prev" type="button" data-bs-target="#bannerCarousel" data-bs-slide="prev">
                 <span class="carousel-control-prev-icon"></span>
             </button>
@@ -122,8 +126,8 @@ $result = $conn->query($sql);
                                 <?= number_format($row['price'], 0, ',', '.') ?> VND
                             </p>
                             <div class="mt-auto d-flex justify-content-between">
-                                <a href="./pages/product_detail.php?id=<?= $row['id'] ?>" class="btn btn-outline-primary">
-                                    <i class="fas fa-bag-shopping"></i> Mua ngay
+                                <a href="./pages/buy_now.php?id=<?= $row['id'] ?>" class="btn btn-outline-primary">
+                                    <i class="fa-solid fa-bag-shopping"></i> Mua ngay
                                 </a>
                                 <a href="./pages/cart.php?add=<?= $row['id'] ?>" class="btn btn-outline-success">
                                     <i class="fas fa-cart-plus"></i> Thêm giỏ

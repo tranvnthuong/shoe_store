@@ -6,7 +6,7 @@ $base_url = '/shoe_store';
 
 // Hiển thị tên user
 $display_name = isset($_SESSION['full_name']) && $_SESSION['full_name'] !== ''
-    ? $_SESSION['full_name']
+    ? $_SESSION['full_name'] . ' (' . number_format($_SESSION['balance'], 0, ',', '.') . 'đ)'
     : 'Tài khoản';
 
 // Đếm giỏ hàng
@@ -206,7 +206,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                     <hr class="dropdown-divider">
                                 </li>
                                 <li>
-                                    <a class="dropdown-item text-danger" href="<?= $base_url ?>/admin/dashboard.php">
+                                    <a class="dropdown-item active" href="<?= $base_url ?>/admin/dashboard.php">
                                         Bảng điều khiển
                                     </a>
                                 </li>

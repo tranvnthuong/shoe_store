@@ -45,6 +45,7 @@ $result = $stmt->get_result();
             <th>Ngày đặt</th>
             <th>Tổng tiền</th>
             <th>Trạng thái</th>
+            <th>Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -60,7 +61,6 @@ $result = $stmt->get_result();
               $total = $total_row['total'] ?? 0;
               ?>
               <td><?= number_format($total, 0, ',', '.') ?> VND</td>
-
               <td>
                 <?php
                 switch ($row['status']) {
@@ -87,10 +87,17 @@ $result = $stmt->get_result();
                 }
                 ?>
               </td>
+
+              <td>
+                <a href="order_details.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-primary">
+                  <i class="fa fa-eye"></i> Xem chi tiết
+                </a>
+              </td>
             </tr>
           <?php endwhile; ?>
         </tbody>
       </table>
+
     <?php else: ?>
       <div class="alert alert-info text-center">Bạn chưa có đơn hàng nào.</div>
     <?php endif; ?>

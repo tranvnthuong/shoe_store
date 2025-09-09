@@ -7,33 +7,33 @@
  </a>
  <a class="sidebar-link <?= (in_array($current_page, ['manage_users.php'])) ? 'active' : '' ?>" href="manage_users.php">
      <i class="fa fa-users"></i>
-     <span>Quản lý người dùng</span>
+     <span>Người dùng</span>
  </a>
  <a class="sidebar-link <?= (in_array($current_page, ['manage_products.php'])) ? 'active' : '' ?>"
      href="manage_products.php">
      <i class="fa fa-box"></i>
-     <span>Quản lý sản phẩm</span>
+     <span>Sản phẩm</span>
  </a>
  <a class="sidebar-link <?= (in_array($current_page, ['manage_orders.php'])) ? 'active' : '' ?>"
      href="manage_orders.php">
      <i class="fa fa-cart-shopping"></i>
-     <span>Quản lý đơn hàng</span>
+     <span>Đơn hàng</span>
  </a>
  <a class="sidebar-link <?= (in_array($current_page, ['manage_categories.php'])) ? 'active' : '' ?>"
      href="manage_categories.php">
      <i class="fa fa-list"></i>
-     <span>Quản lý danh mục</span>
+     <span>Danh mục</span>
  </a>
- <a class="sidebar-link <?= (in_array($current_page, ['manage_brands.php'])) ? 'active' : '' ?>"
-     href="manage_brands.php">
-     <i class="fa fa-tags"></i>
-     <span>Quản lý thương hiệu</span>
+ <a class="sidebar-link <?= (in_array($current_page, ['manage_carousel.php'])) ? 'active' : '' ?>"
+     href="manage_carousel.php">
+     <i class="fa-solid fa-panorama"></i>
+     <span>Slide Banner</span>
  </a>
  <a class="sidebar-link" href="../index.php">
      <i class="fa fa-home"></i>
-     <span>Về trang chủ</span>
+     <span class="text-primary">Trang chủ</span>
  </a>
  <a class="sidebar-link" href="../account/logout.php">
      <i class="fa fa-door-closed"></i>
-     <span>Đăng xuất</span>
+     <span class="text-danger">Đăng xuất</span>
  </a>

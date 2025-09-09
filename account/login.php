@@ -17,10 +17,14 @@ if (isset($_COOKIE['refresh_token'])) {
   if ($user) {
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['email'] = $user['email'];
+    $_SESSION['balance'] = $user['balance'];
     $_SESSION['role'] = $user['role'];
     $_SESSION['full_name'] = $user['full_name'];
     $_SESSION['day_of_birth'] = $user['day_of_birth'];
     $_SESSION['phone'] = $user['phone'];
+    $_SESSION['address'] = $user['address'];
+    $_SESSION['created_at'] = $user['created_at'];
+
 
     setcookie("refresh_token", $token, time() + 60 * 60 * 24 * 7, "/", "", false, true);
     $stmt = $conn->prepare("UPDATE users SET refresh_token=? WHERE id=?");
@@ -47,10 +51,12 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
   if ($user && $user['password'] == $password) {
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['email'] = $user['email'];
+    $_SESSION['balance'] = $user['balance'];
     $_SESSION['role'] = $user['role'];
     $_SESSION['full_name'] = $user['full_name'];
     $_SESSION['day_of_birth'] = $user['day_of_birth'];
     $_SESSION['phone'] = $user['phone'];
+    $_SESSION['address'] = $user['address'];
     $_SESSION['created_at'] = $user['created_at'];
 
     $token = bin2hex(random_bytes(32));
