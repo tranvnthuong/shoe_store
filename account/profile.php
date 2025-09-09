@@ -3,16 +3,16 @@ session_start();
 include("../configs/db.php");
 
 // Lấy username từ session
-$user1name = $_SESSION['username'] ?? '';
-if (!$user1name) {
+$userId = $_SESSION['user_id'] ?? '';
+if (!$userId) {
     header("Location: login.php");
     exit;
 }
 
 // Lấy thông tin người dùng
-$sql = "SELECT * FROM users WHERE email = ?";
+$sql = "SELECT * FROM users WHERE id = ?";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("s", $user1name);
+$stmt->bind_param("i", $userId);
 $stmt->execute();
 $result = $stmt->get_result();
 $user1 = $result->fetch_assoc();
