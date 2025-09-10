@@ -7,6 +7,11 @@ $sql = "SELECT * FROM products
         ORDER BY created_at DESC
         LIMIT 12";
 $result = $conn->query($sql);
+
+include("configs/db.php");
+
+// Lấy tất cả slide từ bảng carousel_home
+$slides = $conn->query("SELECT * FROM carousel_home ORDER BY id DESC");
 ?>
 
 <!DOCTYPE html>
@@ -16,7 +21,7 @@ $result = $conn->query($sql);
     <meta charset="UTF-8">
     <title>Shoe Store</title>
     <link rel="icon" type="image/x-icon" href="./favicon.ico">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
         integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -44,12 +49,18 @@ $result = $conn->query($sql);
     <div class="container" style="padding-top: 80px;">
         <!-- Banner Carousel -->
         <div id="bannerCarousel" class="carousel slide" data-bs-ride="carousel">
+
+            <!-- Indicators -->
             <div class="carousel-indicators">
-                <button type="button" data-bs-target="#bannerCarousel" data-bs-slide-to="0" class="active"></button>
-                <button type="button" data-bs-target="#bannerCarousel" data-bs-slide-to="1"></button>
-                <button type="button" data-bs-target="#bannerCarousel" data-bs-slide-to="2"></button>
+                <?php $i = 0;
+                foreach ($slides as $s): ?>
+                    <button type="button" data-bs-target="#bannerCarousel" data-bs-slide-to="<?= $i ?>"
+                        class="<?= $i == 0 ? 'active' : '' ?>" aria-current="<?= $i == 0 ? 'true' : 'false' ?>"></button>
+                <?php $i++;
+                endforeach; ?>
             </div>
 
+            <!-- Slides -->
             <div class="carousel-inner">
                 <div class="carousel-item active" data-bs-interval="3700">
                     <img src="https://i.pinimg.com/1200x/40/ac/3b/40ac3b92b34d7eb257aa2cbe32cebedf.jpg">
@@ -74,6 +85,7 @@ $result = $conn->query($sql);
                 </div>
             </div>
 
+            <!-- Controls -->
             <button class="carousel-control-prev" type="button" data-bs-target="#bannerCarousel" data-bs-slide="prev">
                 <span class="carousel-control-prev-icon"></span>
             </button>
@@ -122,8 +134,8 @@ $result = $conn->query($sql);
                                 <?= number_format($row['price'], 0, ',', '.') ?> VND
                             </p>
                             <div class="mt-auto d-flex justify-content-between">
-                                <a href="./pages/product_detail.php?id=<?= $row['id'] ?>" class="btn btn-outline-primary">
-                                    <i class="fas fa-bag-shopping"></i> Mua ngay
+                                <a href="./pages/buy_now.php?id=<?= $row['id'] ?>" class="btn btn-outline-primary">
+                                    <i class="fa-solid fa-bag-shopping"></i> Mua ngay
                                 </a>
                                 <a href="./pages/cart.php?add=<?= $row['id'] ?>" class="btn btn-outline-success">
                                     <i class="fas fa-cart-plus"></i> Thêm giỏ
@@ -169,7 +181,7 @@ $result = $conn->query($sql);
         // Bắt đầu hiệu ứng
         typeText(titles[index], 0);
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

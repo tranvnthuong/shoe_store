@@ -1,11 +1,10 @@
 <?php
 // product_detail.php
 session_start();
-include("../configs/db.php"); // file kết nối DB
+include("../configs/db.php");
 
 // Lấy id sản phẩm từ URL
-$id = $_GET['id'] ?? 0;
-$id = (int)$id;
+$id = (int)($_GET['id'] ?? 0);
 
 // Truy vấn sản phẩm
 $sql = "SELECT p.*, c.name as category_name
@@ -17,6 +16,21 @@ $product = $result->fetch_assoc();
 
 if (!$product) {
   die("Sản phẩm không tồn tại!");
+}
+
+// Lấy danh sách biến thể
+$variants = $conn->query("SELECT * FROM product_variants WHERE product_id = $id");
+
+// Lấy danh sách ảnh từ bảng product_images
+$images = $conn->query("SELECT * FROM product_images WHERE product_id = $id");
+
+$images_arr = [];
+while ($img = $images->fetch_assoc()) {
+  $images_arr[] = $img['url'];
+}
+// fallback nếu chưa có ảnh trong product_images
+if (empty($images_arr)) {
+  $images_arr[] = $product['image'] ?? "../uploads/default-shoe.jpg";
 }
 
 // Truy vấn sản phẩm liên quan
@@ -35,7 +49,7 @@ $related_result = $conn->query($related_sql);
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title><?= htmlspecialchars($product['name']); ?></title>
   <link rel="icon" type="image/x-icon" href="../favicon.ico">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
     integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -49,9 +63,27 @@ $related_result = $conn->query($related_sql);
     <div class="row">
       <!-- Ảnh sản phẩm -->
       <div class="col-md-5">
-        <img src="<?= htmlspecialchars($row['image']) ?>" class="card-img-top"
-          alt="<?= htmlspecialchars($row['name']) ?>" style="max-height:50vh; object-fit:cover;"
-          onerror="this.src='../uploads/default-shoe.jpg';">
+        <div id="carouselProduct" class="carousel slide" data-bs-ride="carousel">
+          <div class="carousel-inner">
+            <?php foreach ($images_arr as $k => $img): ?>
+              <div class="carousel-item <?= $k === 0 ? 'active' : '' ?>">
+                <img src="<?= htmlspecialchars($img) ?>" class="d-block w-100" alt="Ảnh sản phẩm"
+                  style="max-height:50vh; object-fit:cover;"
+                  onerror="this.src='../uploads/default-shoe.jpg';">
+              </div>
+            <?php endforeach; ?>
+          </div>
+          <?php if (count($images_arr) > 1): ?>
+            <button class="carousel-control-prev" type="button" data-bs-target="#carouselProduct"
+              data-bs-slide="prev">
+              <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#carouselProduct"
+              data-bs-slide="next">
+              <span class="carousel-control-next-icon"></span>
+            </button>
+          <?php endif; ?>
+        </div>
       </div>
 
       <!-- Thông tin sản phẩm -->
@@ -71,12 +103,30 @@ $related_result = $conn->query($related_sql);
         <p>
           <strong>Tồn kho:</strong> <?= $product['stock']; ?>
         </p>
-        <form method="post" action="cart_add.php">
-          <input type="hidden" name="id" value="<?= $product['id']; ?>">
-          <div class="input-group mb-3" style="max-width:200px;">
-            <input type="number" name="qty" value="1" min="1" max="<?= $product['stock']; ?>"
-              class="form-control">
-            <button type="submit" class="btn btn-primary">Thêm vào giỏ</button>
+        <form method="get" action="cart.php">
+          <input type="hidden" name="add" value="<?= $product['id'] ?>">
+          <?php if ($variants->num_rows > 0): ?>
+            <div class="mb-3">
+              <label class="fw-bold">Phân loại:</label>
+              <select name="variant" class="form-select w-auto d-inline-block">
+                <?php while ($v = $variants->fetch_assoc()): ?>
+                  <option value="<?= $v['id'] ?>">
+                    <?= htmlspecialchars($v['name']) ?> -
+                    <?= number_format($v['price'], 0, ',', '.') ?> VND
+                    (<?= $v['stock'] ?> sp)
+                  </option>
+                <?php endwhile; ?>
+              </select>
+            </div>
+          <?php endif; ?>
+
+          <div class="mt-auto d-flex justify-content-start gap-2">
+            <a href="./buy_now.php?id=<?= $product['id'] ?>" class="btn btn-outline-primary">
+              <i class="fa-solid fa-bag-shopping"></i> Mua ngay
+            </a>
+            <button type="submit" name="add_to_cart" value="1" class="btn btn-outline-success">
+              <i class="fas fa-cart-plus"></i> Thêm giỏ
+            </button>
           </div>
         </form>
       </div>

@@ -25,7 +25,7 @@ $result = $stmt->get_result();
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Đơn hàng - Shoe Store</title>
   <link rel="icon" type="image/x-icon" href="../favicon.ico">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
     integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -34,7 +34,7 @@ $result = $stmt->get_result();
 
 <body class="bg-light">
   <?php include("../layout/header.php") ?>
-  <div class="container my-5">
+  <div class="container" style="padding-top: 80px;">
     <h2 class="mb-4 text-center">📦 Đơn hàng của tôi</h2>
 
     <?php if ($result && $result->num_rows > 0): ?>
@@ -45,6 +45,7 @@ $result = $stmt->get_result();
             <th>Ngày đặt</th>
             <th>Tổng tiền</th>
             <th>Trạng thái</th>
+            <th>Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -60,7 +61,6 @@ $result = $stmt->get_result();
               $total = $total_row['total'] ?? 0;
               ?>
               <td><?= number_format($total, 0, ',', '.') ?> VND</td>
-
               <td>
                 <?php
                 switch ($row['status']) {
@@ -87,16 +87,23 @@ $result = $stmt->get_result();
                 }
                 ?>
               </td>
+
+              <td>
+                <a href="order_details.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-primary">
+                  <i class="fa fa-eye"></i> Xem chi tiết
+                </a>
+              </td>
             </tr>
           <?php endwhile; ?>
         </tbody>
       </table>
+
     <?php else: ?>
       <div class="alert alert-info text-center">Bạn chưa có đơn hàng nào.</div>
     <?php endif; ?>
   </div>
   <?php include("../layout/footer.php") ?>
-  <?php include("../layout/header.php") ?>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

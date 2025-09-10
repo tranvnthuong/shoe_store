@@ -33,13 +33,13 @@ $total = $count_result->fetch_assoc()['total'];
 $total_pages = ceil($total / $limit);
 
 // Truy vấn sản phẩm có phân trang
-$sql = "SELECT p.*, c.name as cat_name 
+$sql = "SELECT p.*, c.name as cat_name, 
+               (SELECT COUNT(*) FROM product_variants v WHERE v.product_id = p.id) as variant_count
         FROM products p 
         JOIN categories c ON p.category_id = c.id 
         $where
         ORDER BY p.created_at DESC 
         LIMIT $limit OFFSET $offset";
-
 $products = $conn->query($sql);
 ?>
 <!DOCTYPE html>
@@ -50,7 +50,7 @@ $products = $conn->query($sql);
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Sản phẩm</title>
     <link rel="icon" type="image/x-icon" href="../favicon.ico">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
         integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -97,7 +97,7 @@ $products = $conn->query($sql);
     </div>
 
     <?php include("../layout/footer.php"); ?>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

@@ -6,8 +6,8 @@ $base_url = '/shoe_store';
 
 // Hiển thị tên user
 $display_name = isset($_SESSION['full_name']) && $_SESSION['full_name'] !== ''
-    ? $_SESSION['full_name']
-    : (isset($_SESSION['username']) ? $_SESSION['username'] : 'Tài khoản');
+    ? $_SESSION['full_name'] . ' (' . number_format($_SESSION['balance'], 0, ',', '.') . 'đ)'
+    : 'Tài khoản';
 
 // Đếm giỏ hàng
 $cart_count = 0;
@@ -192,7 +192,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         <i class="fas fa-user"></i> <?= htmlspecialchars($display_name) ?>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
-                        <?php if (isset($_SESSION['username'])): ?>
+                        <?php if (isset($_SESSION['user_id'])): ?>
                             <li>
                                 <a class="dropdown-item" href="<?= $base_url ?>/account/profile.php">
                                     Thông tin cá nhân
@@ -208,7 +208,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                     <hr class="dropdown-divider">
                                 </li>
                                 <li>
-                                    <a class="dropdown-item text-danger" href="<?= $base_url ?>/admin/dashboard.php">
+                                    <a class="dropdown-item active" href="<?= $base_url ?>/admin/dashboard.php">
                                         Bảng điều khiển
                                     </a>
                                 </li>

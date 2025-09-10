@@ -3,8 +3,8 @@ session_start();
 include("../configs/db.php");
 
 // Chỉ admin mới được vào
-if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') {
-    header("Location: ../account/login.php");
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: ../index.php");
     exit;
 }
 
@@ -44,7 +44,7 @@ $result = $conn->query($sql);
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Quản lý đơn hàng</title>
     <link rel="icon" type="image/x-icon" href="../favicon.ico">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
         integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -74,10 +74,17 @@ $result = $conn->query($sql);
                         <tbody>
                             <?php while ($row = $result->fetch_assoc()): ?>
                                 <tr>
+                                    <?php
+                                    $order_id = $row['id'];
+                                    $sql_items = "SELECT SUM(price * quantity) AS total FROM order_items WHERE order_id = $order_id";
+                                    $total_res = $conn->query($sql_items);
+                                    $total_row = $total_res->fetch_assoc();
+                                    $total = $total_row['total'] ?? 0;
+                                    ?>
                                     <td><?= $row['id'] ?></td>
                                     <td><?= htmlspecialchars($row['full_name']) ?></td>
                                     <td><?= htmlspecialchars($row['email']) ?></td>
-                                    <td><?= number_format($row['total'], 0, ',', '.') ?> VND</td>
+                                    <td><?= number_format($total, 0, ',', '.') ?> VND</td>
                                     <td>
                                         <form method="POST" class="d-flex justify-content-center align-items-center">
                                             <input type="hidden" name="order_id" value="<?= $row['id'] ?>">
@@ -89,9 +96,16 @@ $result = $conn->query($sql);
                                                 <option value="processing"
                                                     <?= $row['status'] == 'processing' ? 'selected' : '' ?>>🔄
                                                     Đang xử lý</option>
-                                                <option value="shipped"
-                                                    <?= $row['status'] == 'shipped' ? 'selected' : '' ?>>🚚
+                                                <option value="shipping"
+                                                    <?= $row['status'] == 'shipping' ? 'selected' : '' ?>>🚚
+                                                    Đang giao</option>
+                                                <option value="completed"
+                                                    <?= $row['status'] == 'completed' ? 'selected' : '' ?>>✅
                                                     Đã giao
+                                                </option>
+                                                <option value="returned"
+                                                    <?= $row['status'] == 'returned' ? 'selected' : '' ?>>🔁
+                                                    Trả hàng
                                                 </option>
                                                 <option value="cancelled"
                                                     <?= $row['status'] == 'cancelled' ? 'selected' : '' ?>>❌ Đã
@@ -103,7 +117,7 @@ $result = $conn->query($sql);
                                     </td>
                                     <td><?= $row['created_at'] ?></td>
                                     <td>
-                                        <a href="order_detail.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info">
+                                        <a href="order_details.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info">
                                             <i class="bi bi-eye"></i> Xem
                                         </a>
                                         <a href="?delete=<?= $row['id'] ?>" class="btn btn-sm btn-danger"
@@ -119,7 +133,7 @@ $result = $conn->query($sql);
             </main>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

@@ -3,9 +3,38 @@ session_start();
 include("../configs/db.php");
 
 // Nếu đã đăng nhập thì chuyển về trang chủ
-if (isset($_SESSION['username'])) {
+if (isset($_SESSION['user_id'])) {
   header("Location: ../index.php");
   exit;
+}
+
+if (isset($_COOKIE['refresh_token'])) {
+  $token = $_COOKIE['refresh_token'];
+  $stmt = $conn->prepare("SELECT * FROM users WHERE refresh_token=? LIMIT 1");
+  $stmt->bind_param("s", $token);
+  $stmt->execute();
+  $user = $stmt->get_result()->fetch_assoc();
+  if ($user) {
+    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['email'] = $user['email'];
+    $_SESSION['balance'] = $user['balance'];
+    $_SESSION['role'] = $user['role'];
+    $_SESSION['full_name'] = $user['full_name'];
+    $_SESSION['day_of_birth'] = $user['day_of_birth'];
+    $_SESSION['phone'] = $user['phone'];
+    $_SESSION['address'] = $user['address'];
+    $_SESSION['created_at'] = $user['created_at'];
+
+
+    setcookie("refresh_token", $token, time() + 60 * 60 * 24 * 7, "/", "", false, true);
+    $stmt = $conn->prepare("UPDATE users SET refresh_token=? WHERE id=?");
+    $stmt->bind_param("si", $token, $user['id']);
+    $stmt->execute();
+    header("Location: ../index.php");
+    exit;
+  } else {
+    setcookie("refresh_token", "", -1, "/", "", false, true);
+  }
 }
 
 $error = "";
@@ -20,13 +49,22 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
   // ⚠️ Hiện tại so sánh plain-text, bạn có thể nâng cấp thành password_hash sau
   if ($user && $user['password'] == $password) {
+    $_SESSION['user_id'] = $user['id'];
     $_SESSION['email'] = $user['email'];
-    $_SESSION['role'] = $user['role']; // admin hoặc user
+    $_SESSION['balance'] = $user['balance'];
+    $_SESSION['role'] = $user['role'];
     $_SESSION['full_name'] = $user['full_name'];
     $_SESSION['day_of_birth'] = $user['day_of_birth'];
+    $_SESSION['phone'] = $user['phone'];
+    $_SESSION['address'] = $user['address'];
+    $_SESSION['created_at'] = $user['created_at'];
 
+    $token = bin2hex(random_bytes(32));
     // Lưu vào cookie (httpOnly)
-    setcookie("refresh_token", $jwt, time() + $expiresTime, "/", "", false, true);
+    setcookie("refresh_token", $token, time() + 60 * 60 * 24 * 7, "/", "", false, true);
+    $stmt = $conn->prepare("UPDATE users SET refresh_token=? WHERE id=?");
+    $stmt->bind_param("si", $token, $user['id']);
+    $stmt->execute();
     header("Location: ../index.php");
     exit;
   } else {
@@ -42,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Đăng nhập - Shoe Store</title>
   <link rel="icon" type="image/x-icon" href="../favicon.ico">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
     integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -70,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     </div>
   </div>
   <?php include("../layout/footer.php") ?>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
