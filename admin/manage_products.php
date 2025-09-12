@@ -16,9 +16,12 @@ $product_images = [];
 $product_variants = [];
 
 /* ================== HÀM QUẢN LÝ ẢNH ================== */
-function addImage($productId, $file)
+function addImage($productId, $file, $isFirst = false)
 {
   global $conn, $uploadDir;
+
+  // kiểm tra file hợp lệ
+  if (!isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) return null;
 
   $hash = sha1_file($file['tmp_name']);
   $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
@@ -34,67 +37,101 @@ function addImage($productId, $file)
     ], JSON_PRETTY_PRINT));
   } else {
     $meta = file_exists($metaPath) ? json_decode(file_get_contents($metaPath), true) : ["ref_count" => 0];
-    $meta['ref_count']++;
+    $meta['ref_count'] = ($meta['ref_count'] ?? 0) + 1;
     file_put_contents($metaPath, json_encode($meta, JSON_PRETTY_PRINT));
   }
 
+  // build url
   $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
   $baseUrl .= "://" . $_SERVER['HTTP_HOST'];
-  $projectRoot = dirname(dirname($_SERVER['SCRIPT_NAME']));
+  $projectRoot = rtrim(dirname(dirname($_SERVER['SCRIPT_NAME'])), '/\\');
   $url = $baseUrl . $projectRoot . "/uploads/products/" . $fileName;
 
   $stmt = $conn->prepare("INSERT INTO product_images (product_id, url) VALUES (?, ?)");
   $stmt->bind_param("is", $productId, $url);
   $stmt->execute();
 
+  if ($isFirst) {
+    $stmt2 = $conn->prepare("UPDATE products SET image = ? WHERE id = ?");
+    $stmt2->bind_param("si", $url, $productId);
+    $stmt2->execute();
+  }
+
   return $url;
 }
 
 function removeImage($imageId, $productId)
 {
-  global $conn;
+  global $conn, $uploadDir;
 
-  $row = $conn->query("SELECT * FROM product_images WHERE id=$imageId AND product_id=$productId")->fetch_assoc();
+  $stmt = $conn->prepare("SELECT * FROM product_images WHERE id = ? AND product_id = ?");
+  $stmt->bind_param("ii", $imageId, $productId);
+  $stmt->execute();
+  $res = $stmt->get_result();
+  $row = $res->fetch_assoc();
   if (!$row) return;
 
-  $parsedUrl = parse_url($row['url'], PHP_URL_PATH);
-  $filePath = $_SERVER['DOCUMENT_ROOT'] . $parsedUrl;
+  $parsedPath = parse_url($row['url'], PHP_URL_PATH);
+  $filePath = $_SERVER['DOCUMENT_ROOT'] . $parsedPath;
   $metaPath = $filePath . ".meta";
 
   if (file_exists($metaPath)) {
     $meta = json_decode(file_get_contents($metaPath), true);
-    $meta['ref_count']--;
+    $meta['ref_count'] = ($meta['ref_count'] ?? 1) - 1;
     if ($meta['ref_count'] <= 0) {
-      if (file_exists($filePath)) unlink($filePath);
-      unlink($metaPath);
+      if (file_exists($filePath)) @unlink($filePath);
+      @unlink($metaPath);
     } else {
       file_put_contents($metaPath, json_encode($meta, JSON_PRETTY_PRINT));
     }
   }
 
-  $conn->query("DELETE FROM product_images WHERE id=$imageId AND product_id=$productId");
-}
+  $stmt2 = $conn->prepare("DELETE FROM product_images WHERE id = ? AND product_id = ?");
+  $stmt2->bind_param("ii", $imageId, $productId);
+  $stmt2->execute();
 
+  // Nếu xóa ảnh đang là ảnh chính trên products.image, ta có thể set null hoặc set ảnh khác (ở đây set NULL)
+  $stmt3 = $conn->prepare("SELECT image FROM products WHERE id = ?");
+  $stmt3->bind_param("i", $productId);
+  $stmt3->execute();
+  $r = $stmt3->get_result()->fetch_assoc();
+  if ($r && $r['image'] === $row['url']) {
+    $conn->query("UPDATE products SET image = NULL WHERE id = " . intval($productId));
+    // Optionally set another image as main:
+    $other = $conn->query("SELECT url FROM product_images WHERE product_id=" . intval($productId) . " LIMIT 1")->fetch_assoc();
+    if ($other) {
+      $stmt4 = $conn->prepare("UPDATE products SET image = ? WHERE id = ?");
+      $stmt4->bind_param("si", $other['url'], $productId);
+      $stmt4->execute();
+    }
+  }
+}
 
 /* ================== XỬ LÝ HÀNH ĐỘNG ================== */
 
 // Xóa sản phẩm
 if (isset($_GET['delete'])) {
   $id = intval($_GET['delete']);
+  // xóa ảnh liên quan (DB + file) trước khi xóa sản phẩm
+  $imgs = $conn->query("SELECT id FROM product_images WHERE product_id=" . $id);
+  while ($img = $imgs->fetch_assoc()) {
+    removeImage($img['id'], $id);
+  }
+  $conn->query("DELETE FROM product_variants WHERE product_id=$id");
   $conn->query("DELETE FROM products WHERE id=$id");
   header("Location: manage_products.php");
   exit;
 }
 
 // Xóa ảnh riêng
-if (isset($_GET['del_img'])) {
+if (isset($_GET['del_img']) && isset($_GET['product'])) {
   removeImage(intval($_GET['del_img']), intval($_GET['product']));
   header("Location: manage_products.php?edit=" . intval($_GET['product']));
   exit;
 }
 
 // Xóa biến thể riêng
-if (isset($_GET['del_variant'])) {
+if (isset($_GET['del_variant']) && isset($_GET['product'])) {
   $vId = intval($_GET['del_variant']);
   $conn->query("DELETE FROM product_variants WHERE id=$vId");
   header("Location: manage_products.php?edit=" . intval($_GET['product']));
@@ -105,43 +142,50 @@ if (isset($_GET['del_variant'])) {
 if (isset($_GET['edit'])) {
   $edit_mode = true;
   $id = intval($_GET['edit']);
-  $edit_product = $conn->query("SELECT * FROM products WHERE id=$id")->fetch_assoc();
+  $stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
+  $stmt->bind_param("i", $id);
+  $stmt->execute();
+  $edit_product = $stmt->get_result()->fetch_assoc();
   $product_images = $conn->query("SELECT * FROM product_images WHERE product_id=$id")->fetch_all(MYSQLI_ASSOC);
   $product_variants = $conn->query("SELECT * FROM product_variants WHERE product_id=$id")->fetch_all(MYSQLI_ASSOC);
 }
 
 // Thêm sản phẩm
 if (isset($_POST['add'])) {
-  $name = $_POST['name'];
-  $price = $_POST['price'];
-  $stock = $_POST['stock'];
-  $desc = $_POST['description'];
+  $name = $_POST['name'] ?? '';
+  $price = floatval($_POST['price'] ?? 0);
+  $stock = intval($_POST['stock'] ?? 0);
+  $desc = $_POST['description'] ?? '';
+  $catId = isset($_POST['category_id']) ? intval($_POST['category_id']) : null;
 
-  $stmt = $conn->prepare("INSERT INTO products (name, price, stock, description, created_at) VALUES (?,?,?,?,NOW())");
-  $stmt->bind_param("sdis", $name, $price, $stock, $desc);
+  $stmt = $conn->prepare("INSERT INTO products (name, price, stock, description, category_id, created_at) VALUES (?,?,?,?,?,NOW())");
+  $stmt->bind_param("sdisi", $name, $price, $stock, $desc, $catId);
   $stmt->execute();
   $productId = $stmt->insert_id;
 
   // Ảnh
   $firstImageUrl = null;
-  foreach ($_FILES['images']['tmp_name'] as $k => $tmp) {
-    if (!empty($_FILES['images']['name'][$k])) {
-      $url = addImage($productId, [
-        "name" => $_FILES['images']['name'][$k],
-        "tmp_name" => $tmp
-      ]);
-      if (!$firstImageUrl) {
-        $firstImageUrl = $url;
+  if (isset($_FILES['images']) && is_array($_FILES['images']['tmp_name'])) {
+    $first = true;
+    foreach ($_FILES['images']['tmp_name'] as $k => $tmp) {
+      if (!empty($_FILES['images']['name'][$k])) {
+        $url = addImage($productId, [
+          "name" => $_FILES['images']['name'][$k],
+          "tmp_name" => $tmp
+        ], $first);
+        if ($first && $url) $firstImageUrl = $url;
+        $first = false;
       }
     }
+    if ($firstImageUrl) {
+      $stmt2 = $conn->prepare("UPDATE products SET image = ? WHERE id = ?");
+      $stmt2->bind_param("si", $firstImageUrl, $productId);
+      $stmt2->execute();
+    }
   }
-  if ($firstImageUrl) {
-    $conn->query("UPDATE products SET image='" . $conn->real_escape_string($firstImageUrl) . "' WHERE id=$productId");
-  }
-
 
   // Biến thể
-  if (!empty($_POST['variants'])) {
+  if (!empty($_POST['variants']) && is_array($_POST['variants'])) {
     foreach ($_POST['variants'] as $var) {
       if (!empty($var['name'])) {
         $vname = $conn->real_escape_string($var['name']);
@@ -159,38 +203,65 @@ if (isset($_POST['add'])) {
 // Cập nhật sản phẩm
 if (isset($_POST['update'])) {
   $id = intval($_POST['id']);
-  $name = $_POST['name'];
-  $price = $_POST['price'];
-  $stock = $_POST['stock'];
-  $desc = $_POST['description'];
+  $name = $_POST['name'] ?? '';
+  $price = floatval($_POST['price'] ?? 0);
+  $stock = intval($_POST['stock'] ?? 0);
+  $desc = $_POST['description'] ?? '';
+  $catId = isset($_POST['category_id']) ? intval($_POST['category_id']) : null;
 
-  $stmt = $conn->prepare("UPDATE products SET name=?, price=?, stock=?, description=? WHERE id=?");
-  $stmt->bind_param("sdssi", $name, $price, $stock, $desc, $id);
+  $stmt = $conn->prepare("UPDATE products SET name=?, price=?, stock=?, description=?, category_id=? WHERE id=?");
+  $stmt->bind_param("sdisii", $name, $price, $stock, $desc, $catId, $id);
   $stmt->execute();
 
-  // Ảnh mới
-  foreach ($_FILES['images']['tmp_name'] as $k => $tmp) {
-    if (!empty($_FILES['images']['name'][$k])) {
-      addImage($id, [
-        "name" => $_FILES['images']['name'][$k],
-        "tmp_name" => $tmp
-      ]);
+  // lấy thông tin ảnh hiện tại để biết có cần gán ảnh mới là ảnh chính
+  $cur = $conn->query("SELECT image FROM products WHERE id=" . $id)->fetch_assoc();
+  $first = empty($cur['image']);
+
+  // // Ảnh mới
+  // if (isset($_FILES['images']) && is_array($_FILES['images']['tmp_name'])) {
+  //   foreach ($_FILES['images']['tmp_name'] as $k => $tmp) {
+  //     if (!empty($_FILES['images']['name'][$k])) {
+  //       addImage($id, [
+  //         "name" => $_FILES['images']['name'][$k],
+  //         "tmp_name" => $tmp
+  //       ], $first);
+  //       $first = false;
+  //     }
+  //   }
+  // }
+
+    // Ảnh
+  $firstImageUrl = null;
+  if (isset($_FILES['images']) && is_array($_FILES['images']['tmp_name'])) {
+    $first = true;
+    foreach ($_FILES['images']['tmp_name'] as $k => $tmp) {
+      if (!empty($_FILES['images']['name'][$k])) {
+        $url = addImage($id, [
+          "name" => $_FILES['images']['name'][$k],
+          "tmp_name" => $tmp
+        ], $first);
+        if ($first && $url) $firstImageUrl = $url;
+        $first = false;
+      }
+    }
+    if ($firstImageUrl) {
+      $stmt2 = $conn->prepare("UPDATE products SET image = ? WHERE id = ?");
+      $stmt2->bind_param("si", $firstImageUrl, $id);
+      $stmt2->execute();
     }
   }
 
-  // Biến thể mới (giữ cũ)
-  if (!empty($_POST['variants'])) {
+  // Biến thể (giữ cũ + thêm/cập nhật)
+  if (!empty($_POST['variants']) && is_array($_POST['variants'])) {
     foreach ($_POST['variants'] as $var) {
-      $vname  = $conn->real_escape_string($var['name']);
-      $vstock = intval($var['stock']);
-      $vprice = floatval($var['price']);
+      $vname  = $conn->real_escape_string($var['name'] ?? '');
+      $vstock = intval($var['stock'] ?? 0);
+      $vprice = floatval($var['price'] ?? 0);
 
       if (!empty($var['id'])) {
-        // Cập nhật biến thể cũ
         $vid = intval($var['id']);
         $conn->query("UPDATE product_variants SET name='$vname', stock=$vstock, price=$vprice WHERE id=$vid AND product_id=$id");
       } else {
-        // Thêm biến thể mới
         if (!empty($vname)) {
           $conn->query("INSERT INTO product_variants (product_id, name, stock, price) VALUES ($id, '$vname', $vstock, $vprice)");
         }
@@ -201,6 +272,9 @@ if (isset($_POST['update'])) {
   header("Location: manage_products.php?edit=$id");
   exit;
 }
+
+// Danh sách danh mục để chọn
+$categories = $conn->query("SELECT id, name FROM categories ORDER BY name ASC");
 
 // Danh sách sản phẩm
 $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
@@ -232,30 +306,49 @@ $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
           </div>
           <div class="card-body">
             <form method="POST" enctype="multipart/form-data">
-              <input type="hidden" name="id" value="<?= $edit_product['id'] ?? '' ?>">
+              <input type="hidden" name="id" value="<?= htmlspecialchars($edit_product['id'] ?? '') ?>">
               <div class="row mb-2">
-                <div class="col-md-4"><input type="text" name="name" class="form-control"
-                    placeholder="Tên sản phẩm" value="<?= $edit_product['name'] ?? '' ?>" required>
+                <div class="col-md-4">
+                  <input type="text" name="name" class="form-control" placeholder="Tên sản phẩm"
+                    value="<?= htmlspecialchars($edit_product['name'] ?? '') ?>" required>
                 </div>
-                <div class="col-md-2"><input type="number" name="price" class="form-control"
-                    placeholder="Giá" value="<?= $edit_product['price'] ?? '' ?>" required></div>
-                <div class="col-md-2"><input type="number" name="stock" class="form-control"
-                    placeholder="Số lượng" value="<?= $edit_product['stock'] ?? '' ?>" required>
+                <div class="col-md-2">
+                  <input type="number" step="0.01" name="price" class="form-control" placeholder="Giá"
+                    value="<?= htmlspecialchars($edit_product['price'] ?? '') ?>" required>
+                </div>
+                <div class="col-md-2">
+                  <input type="number" name="stock" class="form-control" placeholder="Số lượng"
+                    value="<?= htmlspecialchars($edit_product['stock'] ?? '') ?>" required>
                 </div>
                 <div class="col-md-4">
-                  <input type="file" name="images[]" class="form-control" multiple
-                    <?= $edit_mode ? '' : 'required' ?>>
-                  <?php foreach ($product_images as $img): ?>
-                    <div class="d-inline-block position-relative me-1">
-                      <img src="<?= $img['url'] ?>" width="70" class="mt-1 border">
-                      <a href="?del_img=<?= $img['id'] ?>&product=<?= $edit_product['id'] ?>"
-                        class="btn btn-sm btn-danger position-absolute top-0 end-0 py-0 px-1">x</a>
-                    </div>
-                  <?php endforeach; ?>
+                  <select name="category_id" class="form-control" required>
+                    <option value="">-- Chọn danh mục --</option>
+                    <?php while ($cat = $categories->fetch_assoc()): ?>
+                      <option value="<?= $cat['id'] ?>" <?= isset($edit_product['category_id']) && $edit_product['category_id'] == $cat['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($cat['name']) ?>
+                      </option>
+                    <?php endwhile; ?>
+                  </select>
                 </div>
               </div>
+
+              <div class="row mb-2">
+                <div class="col-md-12">
+                  <input type="file" name="images[]" class="form-control" multiple <?= $edit_mode ? '' : 'required' ?>>
+                  <div class="mt-2">
+                    <?php foreach ($product_images as $img): ?>
+                      <div class="d-inline-block position-relative me-1">
+                        <img src="<?= htmlspecialchars($img['url']) ?>" width="70" class="mt-1 border">
+                        <a href="?del_img=<?= $img['id'] ?>&product=<?= $edit_product['id'] ?? '' ?>"
+                          class="btn btn-sm btn-danger position-absolute top-0 end-0 py-0 px-1">x</a>
+                      </div>
+                    <?php endforeach; ?>
+                  </div>
+                </div>
+              </div>
+
               <textarea name="description" class="form-control mb-2"
-                placeholder="Mô tả"><?= $edit_product['description'] ?? '' ?></textarea>
+                placeholder="Mô tả"><?= htmlspecialchars($edit_product['description'] ?? '') ?></textarea>
 
               <!-- Biến thể -->
               <h6>Phân loại sản phẩm</h6>
@@ -265,11 +358,11 @@ $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
                     <div class="row mb-2 align-items-center">
                       <input type="hidden" name="variants[<?= $i ?>][id]" value="<?= $v['id'] ?>">
                       <div class="col"><input type="text" name="variants[<?= $i ?>][name]"
-                          value="<?= $v['name'] ?>" class="form-control"></div>
-                      <div class="col"><input type="number" name="variants[<?= $i ?>][price]"
-                          value="<?= $v['price'] ?>" class="form-control"></div>
+                          value="<?= htmlspecialchars($v['name']) ?>" class="form-control"></div>
+                      <div class="col"><input type="number" step="0.01" name="variants[<?= $i ?>][price]"
+                          value="<?= htmlspecialchars($v['price']) ?>" class="form-control"></div>
                       <div class="col"><input type="number" name="variants[<?= $i ?>][stock]"
-                          value="<?= $v['stock'] ?>" class="form-control"></div>
+                          value="<?= htmlspecialchars($v['stock']) ?>" class="form-control"></div>
                       <div class="col-auto">
                         <a href="?del_variant=<?= $v['id'] ?>&product=<?= $edit_product['id'] ?>"
                           class="btn btn-sm btn-danger">X</a>
@@ -278,18 +371,13 @@ $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
                   <?php endforeach; ?>
                 <?php else: ?>
                   <div class="row mb-2">
-                    <div class="col"><input type="text" name="variants[0][name]"
-                        placeholder="Tên biến thể" class="form-control"></div>
-                    <div class="col"><input type="number" name="variants[0][price]" placeholder="Giá"
-                        class="form-control"></div>
-                    <div class="col"><input type="number" name="variants[0][stock]"
-                        placeholder="Số lượng" class="form-control"></div>
+                    <div class="col"><input type="text" name="variants[0][name]" placeholder="Tên biến thể" class="form-control"></div>
+                    <div class="col"><input type="number" step="0.01" name="variants[0][price]" placeholder="Giá" class="form-control"></div>
+                    <div class="col"><input type="number" name="variants[0][stock]" placeholder="Số lượng" class="form-control"></div>
                   </div>
                 <?php endif; ?>
               </div>
-              <button type="button" class="btn btn-sm btn-secondary mb-3" onclick="addVariant()">+ Thêm
-                biến
-                thể</button>
+              <button type="button" class="btn btn-sm btn-secondary mb-3" onclick="addVariant()">+ Thêm biến thể</button>
 
               <?php if ($edit_mode): ?>
                 <button type="submit" name="update" class="btn btn-primary">Cập nhật</button>
@@ -321,8 +409,8 @@ $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
                   <td><?= $row['id'] ?></td>
                   <td>
                     <?php
-                    $imgs = $conn->query("SELECT url FROM product_images WHERE product_id=" . $row['id'] . " LIMIT 1");
-                    if ($img = $imgs->fetch_assoc()) echo "<img src='{$img['url']}' width='70'>";
+                    $imgs = $conn->query("SELECT url FROM product_images WHERE product_id=" . intval($row['id']) . " LIMIT 1");
+                    if ($img = $imgs->fetch_assoc()) echo "<img src='" . htmlspecialchars($img['url']) . "' width='70'>";
                     ?>
                   </td>
                   <td><?= htmlspecialchars($row['name']) ?></td>
@@ -343,7 +431,6 @@ $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
     </div>
   </div>
 
-
   <script>
     let variantIndex = <?= $edit_mode ? count($product_variants) : 1 ?>;
 
@@ -352,7 +439,7 @@ $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
       const html = `
     <div class="row mb-2">
       <div class="col"><input type="text" name="variants[${variantIndex}][name]" placeholder="Tên biến thể" class="form-control"></div>
-      <div class="col"><input type="number" name="variants[${variantIndex}][price]" placeholder="Giá" class="form-control"></div>
+      <div class="col"><input type="number" step="0.01" name="variants[${variantIndex}][price]" placeholder="Giá" class="form-control"></div>
       <div class="col"><input type="number" name="variants[${variantIndex}][stock]" placeholder="Số lượng" class="form-control"></div>
     </div>`;
       list.insertAdjacentHTML('beforeend', html);
