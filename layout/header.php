@@ -8,7 +8,6 @@ $base_url = '/shoe_store';
 $display_name = isset($_SESSION['full_name']) && $_SESSION['full_name'] !== ''
     ? $_SESSION['full_name'] . ' (' . number_format($_SESSION['balance'], 0, ',', '.') . 'đ)'
     : 'Tài khoản';
-
 // Đếm giỏ hàng
 $cart_count = 0;
 if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {

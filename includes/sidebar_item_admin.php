@@ -9,6 +9,10 @@
      <i class="fa fa-users"></i>
      <span>Người dùng</span>
  </a>
+ <a class="sidebar-link <?= (in_array($current_page, ['duyet_nap.php'])) ? 'active' : '' ?>" href="duyet_nap.php">
+     <i class="fa fa-users"></i>
+     <span>Duyệt nạp</span>
+ </a>
  <a class="sidebar-link <?= (in_array($current_page, ['manage_products.php'])) ? 'active' : '' ?>"
      href="manage_products.php">
      <i class="fa fa-box"></i>

@@ -18,17 +18,17 @@ $csrf_token = $_SESSION['csrf_token'];
 $error = "";
 $success = "";
 
-// --- Cập nhật thông tin cá nhân ---
+/* ------------------- Cập nhật thông tin cá nhân ------------------- */
 if (isset($_POST['update_profile'])) {
     if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) die("CSRF token không hợp lệ!");
 
     if (empty($_POST['full_name']) || trim($_POST['full_name']) == "") {
         $error = "Vui lòng nhập đầy đủ thông tin cá nhân!";
     } else {
-        $full_name    = $_POST['full_name'];
+        $full_name    = trim($_POST['full_name']);
         $day_of_birth = $_POST['day_of_birth'] ?? null;
-        $phone        = $_POST['phone'];
-        $address      = $_POST['address'];
+        $phone        = trim($_POST['phone']);
+        $address      = trim($_POST['address']);
 
         $sql = "UPDATE users SET full_name=?, day_of_birth=?, phone=?, address=? WHERE id=?";
         $stmt = $conn->prepare($sql);
@@ -44,7 +44,7 @@ if (isset($_POST['update_profile'])) {
     }
 }
 
-// --- Đổi mật khẩu ---
+/* ------------------- Đổi mật khẩu ------------------- */
 if (isset($_POST['change_password'])) {
     if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) die("CSRF token không hợp lệ!");
 
@@ -59,21 +59,22 @@ if (isset($_POST['change_password'])) {
     $result = $stmt->get_result();
     $user2 = $result->fetch_assoc();
 
-    if ($user2['password'] !== $current_password) {
+    if (!$user2 || !password_verify($current_password, $user2['password'])) {
         $error = "Mật khẩu hiện tại không chính xác!";
     } elseif ($new_password !== $confirm_password) {
         $error = "Mật khẩu mới không khớp!";
     } else {
+        $hashed = password_hash($new_password, PASSWORD_DEFAULT);
         $sql = "UPDATE users SET password=? WHERE id=?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("si", $new_password, $userId);
+        $stmt->bind_param("si", $hashed, $userId);
         $stmt->execute();
 
         $success = "Đổi mật khẩu thành công!";
     }
 }
 
-// --- Nạp tiền ---
+/* ------------------- Nạp tiền qua ngân hàng ------------------- */
 if (isset($_POST['deposit_money'])) {
     if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) die("CSRF token không hợp lệ!");
 
@@ -81,14 +82,14 @@ if (isset($_POST['deposit_money'])) {
     if ($amount <= 0) {
         $error = "Số tiền nạp phải lớn hơn 0!";
     } else {
-        $sql = "UPDATE users SET balance = balance + ? WHERE id=?";
+        $sql = "INSERT INTO nap_tien (user_id, so_tien, trang_thai) VALUES (?, ?, 'choduyet')";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ii", $amount, $userId);
+        $stmt->bind_param("ii", $userId, $amount);
         if ($stmt->execute()) {
-            $_SESSION['balance'] += $amount;
-            $success = "Nạp tiền thành công! +" . number_format($amount, 0, ',', '.') . " VND";
+            $success = "Bạn đã tạo yêu cầu nạp " . number_format($amount, 0, ',', '.') . " VND. 
+                        Vui lòng chuyển khoản theo hướng dẫn và chờ admin duyệt!";
         } else {
-            $error = "Có lỗi khi nạp tiền, thử lại sau!";
+            $error = "Có lỗi khi tạo yêu cầu nạp tiền!";
         }
     }
 }
@@ -108,7 +109,7 @@ if (isset($_POST['deposit_money'])) {
 <?php include("../layout/header.php"); ?>
 
 <div class="container" style="padding-top: 80px;">
-  <h2>Thông tin cá nhân</h2>
+  <h2><i class="fa-solid fa-address-card"></i>Thông tin cá nhân</h2>
 
   <?php if (!empty($error)): ?>
     <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
@@ -126,12 +127,13 @@ if (isset($_POST['deposit_money'])) {
     <p><strong>Địa chỉ:</strong> <?= $_SESSION['address'] ?? "Chưa cập nhật"; ?></p>
     <p><strong>Ngày tham gia:</strong> <?= $_SESSION['created_at'] ?? "Chưa cập nhật"; ?></p>
     <p><strong>Vai trò:</strong> <?= $_SESSION['role']; ?></p>
-
+    
     <div class="d-flex justify-content-center gap-2">
-      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateInfoModal">Cập nhật thông tin</button>
-      <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#changePasswordModal">Đổi mật khẩu</button>
-      <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#depositModal">💰 Nạp tiền</button>
-      <a href="logout.php" class="btn btn-danger">Đăng xuất</a>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateInfoModal"><i class="fa-solid fa-square-pen"></i>Cập nhật thông tin</button>
+      <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#changePasswordModal"><i class="fa-solid fa-lock"></i>Đổi mật khẩu</button>
+      <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#depositModal"><i class="fa-solid fa-wallet"></i>Nạp tiền</button>
+      <a href="charge_history.php" class="btn btn-info"><i class="fa-solid fa-clock-rotate-left"></i>Lịch sử nạp</a>
+      <a href="logout.php" class="btn btn-danger"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
     </div>
   </div>
 </div>
@@ -201,7 +203,7 @@ if (isset($_POST['deposit_money'])) {
   </div>
 </div>
 
-<!-- Modal 3: Nạp tiền -->
+<!-- Modal 3: Nạp tiền qua ngân hàng -->
 <div class="modal fade" id="depositModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -209,30 +211,105 @@ if (isset($_POST['deposit_money'])) {
         <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
         <input type="hidden" name="deposit_money" value="1">
         <div class="modal-header">
-          <h5 class="modal-title">💰 Nạp tiền vào tài khoản</h5>
+          <h5 class="modal-title">💰 Nạp tiền qua ngân hàng</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-            <div class="mb-3"><label>Mã thẻ</label>
-            <input type="number" class="form-control" name="cart"  required>
+          <div class="alert alert-info">
+            <p><strong>Thông tin chuyển khoản:</strong></p>
+            <p>Ngân hàng: <b>Vietcombank</b></p>
+            <p>Số tài khoản: <b>0123456789</b></p>
+            <p>Chủ tài khoản: <b>Nguyen Van A</b></p>
+            <p>Nội dung: <b>naptien_<?= $_SESSION['email'] ?></b></p>
           </div>
-          <div class="mb-3"><label>Số seri</label>
-            <input type="number" class="form-control" name="seri"  required>
+          <div class="mb-3">
+            <label for="amount">Số tiền muốn nạp (VND)</label>
+            <input type="text" id="amount" class="form-control" name="amount" min="10000" step="1000" max="100000000" required autocomplete="off">
+            <datalist id="suggestions">
+              <option value="10,000 VND">
+              <option value="100,000 VND">
+              <option value="1,000,000 VND">
+              <option value="10,000,000 VND">
+              <option value="100,000,000 VND">
+              <option value="20,000 VND">
+              <option value="200,000 VND">
+              <option value="2,000,000 VND">
+              <option value="20,000,000 VND">
+              <option value="30,000 VND">
+              <option value="300,000 VND">
+              <option value="3,000,000 VND">
+              <option value="30,000,000 VND">
+              <option value="40,000 VND">
+              <option value="400,000 VND">
+              <option value="4,000,000 VND">
+              <option value="40,000,000 VND">
+              <option value="50,000 VND">
+              <option value="500,000 VND">
+              <option value="5,000,000 VND">
+              <option value="50,000,000 VND">
+              <option value="60,000 VND">
+              <option value="600,000 VND">
+              <option value="6,000,000 VND">
+              <option value="60,000,000 VND">
+              <option value="70,000 VND">
+              <option value="700,000 VND">
+              <option value="7,000,000 VND">
+              <option value="70,000,000 VND">
+              <option value="80,000 VND">
+              <option value="800,000 VND">
+              <option value="8,000,000 VND">
+              <option value="80,000,000 VND">
+              <option value="90,000 VND">
+              <option value="900,000 VND">
+              <option value="9,000,000 VND">
+              <option value="90,000,000 VND">
+            </datalist>
+            <script>
+              const input = document.getElementById('amount');
+              const options = Array.from(document.getElementById('suggestions').options).map(o => o.value);
+              function parseMoney(str) {
+                if (!str) return '';
+                return str.replace(/[^\d]/g, ''); // bỏ hết ký tự không phải số
+              }
+
+
+              let raw = 0;
+              input.addEventListener('input', () => {
+                if (!input.hasAttribute("list")) {
+                  input.setAttribute('list', 'suggestions');
+                }
+                if (input.value.trim() === '') {
+                    input.removeAttribute('list');
+                }
+                if (options.includes(input.value)) {
+                    raw = parseMoney(input.value).substring(0, 8);
+                    input.value = raw;
+                } else {
+                    input.value = parseMoney(input.value).substring(0, 8);
+                }
+              });
+              input.addEventListener('blur', () => {
+                if (raw != 0)
+                    input.value = raw;
+                setTimeout(() => {
+                  input.removeAttribute('list');
+                  raw = 0;
+                }, 1000);
+              })
+            </script>
           </div>
-          <div class="mb-3"><label>Số tiền (VND)</label>
-            <input type="number" class="form-control" name="amount" min="1000" step="1000" required>
-          </div>
+          <p class="text-muted"><i>Sau khi chuyển khoản, admin sẽ duyệt và cộng tiền vào tài khoản của bạn.</i></p>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-          <button type="submit" class="btn btn-success">Nạp tiền</button>
+          <button type="submit" class="btn btn-success">Tạo yêu cầu nạp</button>
         </div>
       </form>
     </div>
   </div>
 </div>
-
 <?php include("../layout/footer.php"); ?>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

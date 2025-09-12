@@ -80,7 +80,7 @@
             <h6 class="mt-2">Triệu Tài Long</h6>
             <small>CEO & Founder</small>
             <div class="d-flex justify-content-center mt-2">
-              <a href="#" class="text-primary fs-4"><i class="fa-brands fa-facebook"></i></a>
+              <a href="https://www.facebook.com/duylongcutedangyeuvcanhoo" class="text-primary fs-4"><i class="fa-brands fa-facebook"></i></a>
               <a href="#" class="text-danger fs-4"><i class="fa-brands fa-square-instagram"></i></a>
               <a href="#" class="text-info fs-4"><i class="fa-brands fa-telegram"></i></a>
             </div>
@@ -120,7 +120,7 @@
             <small>CSKH</small>
           </div>
           <div class="d-flex justify-content-center mt-2">
-            <a href="#" class="text-primary fs-4"><i class="fa-brands fa-facebook"></i></a>
+            <a href="https://web.facebook.com/vi.van.manh.857440" class="text-primary fs-4"><i class="fa-brands fa-facebook"></i></a>
             <a href="#" class="text-danger fs-4"><i class="fa-brands fa-square-instagram"></i></a>
             <a href="#" class="text-info fs-4"><i class="fa-brands fa-telegram"></i></a>
           </div>

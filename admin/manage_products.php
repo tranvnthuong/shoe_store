@@ -217,19 +217,6 @@ if (isset($_POST['update'])) {
   $cur = $conn->query("SELECT image FROM products WHERE id=" . $id)->fetch_assoc();
   $first = empty($cur['image']);
 
-  // // Ảnh mới
-  // if (isset($_FILES['images']) && is_array($_FILES['images']['tmp_name'])) {
-  //   foreach ($_FILES['images']['tmp_name'] as $k => $tmp) {
-  //     if (!empty($_FILES['images']['name'][$k])) {
-  //       addImage($id, [
-  //         "name" => $_FILES['images']['name'][$k],
-  //         "tmp_name" => $tmp
-  //       ], $first);
-  //       $first = false;
-  //     }
-  //   }
-  // }
-
     // Ảnh
   $firstImageUrl = null;
   if (isset($_FILES['images']) && is_array($_FILES['images']['tmp_name'])) {
@@ -332,20 +319,30 @@ $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
                 </div>
               </div>
 
-              <div class="row mb-2">
-                <div class="col-md-12">
-                  <input type="file" name="images[]" class="form-control" multiple <?= $edit_mode ? '' : 'required' ?>>
-                  <div class="mt-2">
-                    <?php foreach ($product_images as $img): ?>
-                      <div class="d-inline-block position-relative me-1">
-                        <img src="<?= htmlspecialchars($img['url']) ?>" width="70" class="mt-1 border">
-                        <a href="?del_img=<?= $img['id'] ?>&product=<?= $edit_product['id'] ?? '' ?>"
-                          class="btn btn-sm btn-danger position-absolute top-0 end-0 py-0 px-1">x</a>
-                      </div>
-                    <?php endforeach; ?>
-                  </div>
+           <div class="row mb-2">
+          <div class="col-md-12">
+            <!-- Vùng kéo thả -->
+            <div id="drop-area" class="border rounded p-3 text-center bg-light">
+              <input type="file" id="fileElem" name="images[]" multiple accept="image/*" 
+                    class="d-none" <?= $edit_mode ? '' : 'required' ?>>
+              <label class="btn btn-outline-primary mt-2" for="fileElem">Chọn ảnh</label>
+              <!-- Preview ảnh mới -->
+              <div id="preview" class="mt-3 d-flex flex-wrap gap-2"></div>
+            </div>
+
+            <!-- Ảnh đã có trong DB -->
+            <div class="mt-2">
+              <?php foreach ($product_images as $img): ?>
+                <div class="d-inline-block position-relative me-1">
+                  <img src="<?= htmlspecialchars($img['url']) ?>" width="70" class="mt-1 border">
+                  <a href="?del_img=<?= $img['id'] ?>&product=<?= $edit_product['id'] ?? '' ?>"
+                    class="btn btn-sm btn-danger position-absolute top-0 end-0 py-0 px-1">x</a>
                 </div>
-              </div>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        </div>
+
 
               <textarea name="description" class="form-control mb-2"
                 placeholder="Mô tả"><?= htmlspecialchars($edit_product['description'] ?? '') ?></textarea>
@@ -430,7 +427,7 @@ $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
       </main>
     </div>
   </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     let variantIndex = <?= $edit_mode ? count($product_variants) : 1 ?>;
 

@@ -49,9 +49,7 @@ $result = $stmt->get_result();
       transform: translateY(20px);
       animation: fadeUp 0.6s ease forwards;
     }
-    @keyframes fadeUp {
-      to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
     .order-header {
       padding: 15px;
       background: linear-gradient(135deg, #36d1dc, #5b86e5);
@@ -95,31 +93,33 @@ $result = $stmt->get_result();
       <?php while ($row = $result->fetch_assoc()): ?>
         <?php
         $order_id = $row['id'];
-        $sql_items = "SELECT SUM(price * quantity) AS total FROM order_items WHERE order_id = $order_id";
-        $total_res = $conn->query($sql_items);
-        $total_row = $total_res->fetch_assoc();
-        $total = $total_row['total'] ?? 0;
+
+        // Truy vấn tổng tiền & số sản phẩm
+        $sql_items = "SELECT SUM(price * quantity) AS total, SUM(quantity) AS items FROM order_items WHERE order_id = ?";
+        $stmt_items = $conn->prepare($sql_items);
+        $stmt_items->bind_param("i", $order_id);
+        $stmt_items->execute();
+        $total_res = $stmt_items->get_result()->fetch_assoc();
+        $total = $total_res['total'] ?? 0;
+        $items_count = $total_res['items'] ?? 0;
+
+        // Format ngày
+        $order_date = date("d/m/Y H:i", strtotime($row['created_at']));
 
         // Hiển thị trạng thái
         switch ($row['status']) {
           case 'pending':
-            $status = '<span class="status-badge bg-warning text-dark">⏳ Chờ xác nhận</span>';
-            break;
+            $status = '<span class="status-badge bg-warning text-dark">⏳ Chờ xác nhận</span>'; break;
           case 'processing':
-            $status = '<span class="status-badge bg-info text-white">📦 Chờ lấy hàng</span>';
-            break;
+            $status = '<span class="status-badge bg-info text-white">📦 Chờ lấy hàng</span>'; break;
           case 'shipping':
-            $status = '<span class="status-badge bg-primary text-white">🚚 Đang giao</span>';
-            break;
+            $status = '<span class="status-badge bg-primary text-white">🚚 Đang giao</span>'; break;
           case 'completed':
-            $status = '<span class="status-badge bg-success text-white">✅ Đã giao</span>';
-            break;
+            $status = '<span class="status-badge bg-success text-white">✅ Đã giao</span>'; break;
           case 'returned':
-            $status = '<span class="status-badge bg-secondary text-white">↩️ Trả hàng</span>';
-            break;
+            $status = '<span class="status-badge bg-secondary text-white">↩️ Trả hàng</span>'; break;
           case 'canceled':
-            $status = '<span class="status-badge bg-danger text-white">❌ Đã hủy</span>';
-            break;
+            $status = '<span class="status-badge bg-danger text-white">❌ Đã hủy</span>'; break;
           default:
             $status = '<span class="status-badge bg-dark text-white">Không rõ</span>';
         }
@@ -130,7 +130,8 @@ $result = $stmt->get_result();
             <span><?= $status ?></span>
           </div>
           <div class="order-body">
-            <div class="info-item"><i class="fa fa-calendar"></i> Ngày đặt: <?= $row['created_at'] ?></div>
+            <div class="info-item"><i class="fa fa-calendar"></i> Ngày đặt: <?= $order_date ?></div>
+            <div class="info-item"><i class="fa fa-list"></i> Sản phẩm: <strong><?= $items_count ?></strong></div>
             <div class="info-item"><i class="fa fa-coins"></i> Tổng tiền: <strong><?= number_format($total, 0, ',', '.') ?> VND</strong></div>
             <div class="info-item"><i class="fa fa-credit-card"></i> Thanh toán: <?= htmlspecialchars($row['payment_method']) ?></div>
           </div>
@@ -149,5 +150,4 @@ $result = $stmt->get_result();
   <?php include("../layout/footer.php") ?>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>
