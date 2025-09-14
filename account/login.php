@@ -177,6 +177,8 @@ if (isset($_COOKIE['refresh_token'])) {
         togglePassword.find('i').toggleClass("toggle-active");
       });
 
+      const btnLoader = makeButtonLoader($("#btnSubmit"));
+
       $("#loginForm").on("submit", function(e) {
         e.preventDefault();
 
@@ -186,11 +188,10 @@ if (isset($_COOKIE['refresh_token'])) {
           data: $(this).serialize(),
           dataType: "json",
           beforeSend: () => {
-            showIconLoading($("#btnSubmit"));
+            btnLoader.showLoading();
           },
           complete: () => {
-            showIcon($("#btnSubmit"),
-              '<i class="fa-solid fa-right-to-bracket"></i>');
+            btnLoader.showDefault();
           },
           success: (data) => {
             showMessage(data);

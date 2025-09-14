@@ -144,7 +144,6 @@ if (isset($_POST['checkout'])) {
       $conn->commit();
 
       $msg = "
-      <div class='container my-5'>
         <div class='card shadow-lg border-success'>
           <div class='card-body text-center'>
             <h3 class='text-success'>✅ Đặt hàng thành công!</h3>
@@ -153,8 +152,7 @@ if (isset($_POST['checkout'])) {
             <a href='products.php' class='btn btn-primary mt-3'>Tiếp tục mua sắm</a>
             <a href='orders.php' class='btn btn-outline-success mt-3'>Xem đơn hàng của tôi</a>
           </div>
-        </div>
-      </div>";
+        </div>";
     } catch (Exception $e) {
       $conn->rollback();
       $error = "<div class='alert alert-danger text-center'>❌ Lỗi đặt hàng: " . htmlspecialchars($e->getMessage()) . "</div>";

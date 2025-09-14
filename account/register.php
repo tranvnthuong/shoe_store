@@ -166,6 +166,8 @@ $csrf_token = $_SESSION['csrf_token'];
         togglePassword.find('i').toggleClass("toggle-active");
       });
 
+      const btnLoader = makeButtonLoader($("#btnSubmit"));
+
       $("#registerForm").on("submit", function(e) {
         e.preventDefault();
 
@@ -175,11 +177,10 @@ $csrf_token = $_SESSION['csrf_token'];
           data: $(this).serialize(),
           dataType: "json",
           beforeSend: () => {
-            showIconLoading($("#btnSubmit"));
+            btnLoader.showLoading();
           },
           complete: () => {
-            showIcon($("#btnSubmit"),
-              '  <i class="fa-solid fa-globe"></i>');
+            btnLoader.showDefault();
           },
           success: (data) => {
             showMessage(data);

@@ -200,7 +200,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     title="Giỏ hàng">
                     <i class="fas fa-shopping-cart"></i>
                     <?php if ($cart_count > 0): ?>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        <span id="cartCount"
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                             <?= $cart_count ?>
                         </span>
                     <?php endif; ?>

@@ -14,7 +14,9 @@ $full_name = $_SESSION['full_name'] ?? '';
 $phone     = $_SESSION['phone'] ?? '';
 $address   = $_SESSION['address'] ?? '';
 
-$msg = $error = null;
+$referer = $_SERVER['HTTP_REFERER'] ?? '../index.php';
+$msg = null;
+$error = null;
 
 // Lấy product_id, variant_id, qty từ URL
 $product_id = intval($_GET['id'] ?? 0);
@@ -22,7 +24,13 @@ $variant_id = !empty($_GET['variant']) ? intval($_GET['variant']) : null;
 $qty        = max(1, intval($_GET['qty'] ?? 1));
 
 if ($product_id <= 0) {
-    die("❌ Thiếu ID sản phẩm.");
+    $_SESSION['data_msg'] = json_encode([
+        "status" => "error",
+        "msg" => "Thiếu ID sản phẩm",
+        "isToast" => true
+    ]);
+    header("Location: $referer");
+    exit;
 }
 
 // Lấy thông tin sản phẩm
@@ -43,7 +51,23 @@ if ($variant_id) {
 $stmt->execute();
 $product = $stmt->get_result()->fetch_assoc();
 if (!$product) {
-    die("❌ Sản phẩm không tồn tại hoặc biến thể không hợp lệ.");
+    $_SESSION['data_msg'] = json_encode([
+        "status" => "error",
+        "msg" => "Sản phẩm không tồn tại hoặc biến thể không hợp lệ",
+        "isToast" => true
+    ]);
+    header("Location: $referer");
+    exit;
+}
+
+if ($product['stock'] <= 0) {
+    $_SESSION['data_msg'] = json_encode([
+        "status" => "error",
+        "msg" => "Sản phẩm này đã hết hàng",
+        "isToast" => true
+    ]);
+    header("Location: $referer");
+    exit;
 }
 
 // Xử lý áp dụng coupon
@@ -122,8 +146,15 @@ if (isset($_POST['checkout'])) {
 
             $conn->commit();
             unset($_SESSION['coupon']);
-            $msg = "<div class='alert alert-success text-center'>
-                ✅ Đặt hàng thành công! Mã đơn hàng: #$order_id
+
+            $msg = "<div class='card shadow-lg border-success'>
+            <div class='card-body text-center'>
+                <h3 class='text-success'>✅ Đặt hàng thành công!</h3>
+                <p class='lead'>Cảm ơn bạn <b>" . htmlspecialchars($full_name) . "</b> đã mua sắm tại cửa hàng.</p>
+                <p>Mã đơn hàng của bạn: <b>#{$order_id}</b></p>
+                <a href='products.php' class='btn btn-primary mt-3'>Tiếp tục mua sắm</a>
+                <a href='orders.php' class='btn btn-outline-success mt-3'>Xem đơn hàng của tôi</a>
+            </div>
             </div>";
         } catch (Exception $e) {
             $conn->rollback();
@@ -150,72 +181,75 @@ if (isset($_POST['checkout'])) {
     <?php include("../layout/header.php"); ?>
 
     <div class="container" style="padding-top: 80px;">
-        <h2>🛒 Xác nhận thanh toán</h2>
-        <?php if (!empty($msg)) echo $msg; ?>
-        <?php if (!empty($error)) echo $error; ?>
+        <?php if (!empty($msg)): ?>
+            <?= $msg ?>
+        <?php else: ?>
+            <h2>🛒 Xác nhận thanh toán</h2>
+            <?php if (!empty($error)) echo $error; ?>
 
-        <form method="post">
-            <table class="table table-bordered text-center">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Ảnh</th>
-                        <th>Tên</th>
-                        <th>Phân loại</th>
-                        <th>Số lượng</th>
-                        <th>Giá</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><img src="<?= htmlspecialchars($product['image']) ?>" width="80"></td>
-                        <td><?= htmlspecialchars($product['name']) ?></td>
-                        <td>
-                            <?php
-                            $vs = $conn->query("SELECT id,name FROM product_variants WHERE product_id=" . (int)$product['product_id']);
-                            if ($vs->num_rows > 0): ?>
-                                <div class="d-flex align-items-center gap-2">
-                                    <select name="variant_id" class="form-select">
-                                        <?php while ($v = $vs->fetch_assoc()): ?>
-                                            <option value="<?= $v['id'] ?>" <?= ($variant_id == $v['id'] ? 'selected' : '') ?>>
-                                                <?= htmlspecialchars($v['name']) ?>
-                                            </option>
-                                        <?php endwhile; ?>
-                                    </select>
-                                    <!-- Nút mở bảng size -->
-                                    <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#sizeChartModal">
-                                        Bảng size
-                                    </button>
-                                </div>
-                            <?php else: ?>
-                                <input type="hidden" name="variant_id" value="">
-                                Không có
-                            <?php endif; ?>
-                        </td>
-                        <td><span><?= $qty ?> </span></td>
-                        <td><?= number_format($product['price'], 0, ',', '.') ?> VND</td>
-                    </tr>
-                </tbody>
-            </table>
-            <input type="hidden" name="quantity" value="<?= $qty ?>" class="form-control w-50 mx-auto">
-            <div class="mb-3">
-                <label>Địa chỉ giao hàng</label>
-                <input type="text" name="address" value="<?= htmlspecialchars($address) ?>" class="form-control"
-                    required>
-            </div>
-            <div class="mb-3">
-                <label>SĐT</label>
-                <input type="text" name="phone" value="<?= htmlspecialchars($phone) ?>" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label>Thanh toán</label>
-                <select name="payment" class="form-select">
-                    <option value="COD">Thanh toán khi nhận hàng</option>
-                    <option value="BALANCE">Số dư tài khoản</option>
-                </select>
-            </div>
-            <button type="submit" name="checkout" class="btn btn-success w-100">Xác nhận mua hàng</button>
-        </form>
+            <form method="post">
+                <table class="table table-bordered text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Ảnh</th>
+                            <th>Tên</th>
+                            <th>Phân loại</th>
+                            <th>Số lượng</th>
+                            <th>Giá</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><img src="<?= htmlspecialchars($product['image']) ?>" width="80"></td>
+                            <td><?= htmlspecialchars($product['name']) ?></td>
+                            <td>
+                                <?php
+                                $vs = $conn->query("SELECT id,name FROM product_variants WHERE product_id=" . (int)$product['product_id']);
+                                if ($vs->num_rows > 0): ?>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <select name="variant_id" class="form-select">
+                                            <?php while ($v = $vs->fetch_assoc()): ?>
+                                                <option value="<?= $v['id'] ?>" <?= ($variant_id == $v['id'] ? 'selected' : '') ?>>
+                                                    <?= htmlspecialchars($v['name']) ?>
+                                                </option>
+                                            <?php endwhile; ?>
+                                        </select>
+                                        <!-- Nút mở bảng size -->
+                                        <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#sizeChartModal">
+                                            Bảng size
+                                        </button>
+                                    </div>
+                                <?php else: ?>
+                                    <input type="hidden" name="variant_id" value="">
+                                    Không có
+                                <?php endif; ?>
+                            </td>
+                            <td><span><?= $qty ?> </span></td>
+                            <td><?= number_format($product['price'], 0, ',', '.') ?> VND</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <input type="hidden" name="quantity" value="<?= $qty ?>" class="form-control w-50 mx-auto">
+                <div class="mb-3">
+                    <label>Địa chỉ giao hàng</label>
+                    <input type="text" name="address" value="<?= htmlspecialchars($address) ?>" class="form-control"
+                        required>
+                </div>
+                <div class="mb-3">
+                    <label>SĐT</label>
+                    <input type="text" name="phone" value="<?= htmlspecialchars($phone) ?>" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Thanh toán</label>
+                    <select name="payment" class="form-select">
+                        <option value="COD">Thanh toán khi nhận hàng</option>
+                        <option value="BALANCE">Số dư tài khoản</option>
+                    </select>
+                </div>
+                <button type="submit" name="checkout" class="btn btn-success w-100">Xác nhận mua hàng</button>
+            </form>
+        <?php endif; ?>
     </div>
 
     <!-- Modal bảng size -->

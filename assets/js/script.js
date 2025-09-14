@@ -1,13 +1,3 @@
-const showIconLoading = (disableBtnEl) => {
-  disableBtnEl.prop("disabled", true);
-  disableBtnEl.find("span").html('<i class="fa fa-spinner fa-spin"></i>');
-};
-
-const showIcon = (enableBtnEl, iconHtml) => {
-  enableBtnEl.prop("disabled", false);
-  enableBtnEl.find("span").html(iconHtml);
-};
-
 const Toast = Swal.mixin({
   toast: true,
   position: "bottom-end", // Position of the toast (e.g., 'top-end', 'bottom-start')
@@ -19,6 +9,21 @@ const Toast = Swal.mixin({
     toast.onmouseleave = Swal.resumeTimer; // Resume timer on mouse leave
   },
 });
+
+function makeButtonLoader(btnEl) {
+  const defaultIcon = btnEl.find("span").html();
+
+  return {
+    showLoading: () => {
+      btnEl.prop("disabled", true);
+      btnEl.find("span").html('<i class="fa fa-spinner fa-spin"></i>');
+    },
+    showDefault: () => {
+      btnEl.prop("disabled", false);
+      btnEl.find("span").html(defaultIcon);
+    },
+  };
+}
 
 const showMessage = (data) => {
   if (data.status === "success") {

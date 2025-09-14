@@ -40,6 +40,12 @@ $related_sql = "SELECT * FROM products
                 ORDER BY created_at DESC 
                 LIMIT 4";
 $related_result = $conn->query($related_sql);
+
+// CSRF token
+if (empty($_SESSION['csrf_token'])) {
+  $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['csrf_token'];
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -103,12 +109,14 @@ $related_result = $conn->query($related_sql);
         <p>
           <strong>Tồn kho:</strong> <?= $product['stock']; ?>
         </p>
-        <form method="get" action="cart.php">
-          <input type="hidden" name="add" value="<?= $product['id'] ?>">
+        <form id="addToCartForm" method="post">
+          <input type="hidden" name="action" value="add">
+          <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
+          <input type="hidden" name="id" value="<?= $product['id'] ?>">
           <?php if ($variants->num_rows > 0): ?>
             <div class="mb-3">
               <label class="fw-bold">Phân loại:</label>
-              <select name="variant" class="form-select w-auto d-inline-block">
+              <select id="variantSelect" name="variant" class="form-select w-auto d-inline-block">
                 <?php while ($v = $variants->fetch_assoc()): ?>
                   <option value="<?= $v['id'] ?>">
                     <?= htmlspecialchars($v['name']) ?> -
@@ -121,11 +129,13 @@ $related_result = $conn->query($related_sql);
           <?php endif; ?>
 
           <div class="mt-auto d-flex justify-content-start gap-2">
-            <a href="./buy_now.php?id=<?= $product['id'] ?>" class="btn btn-outline-primary">
-              <i class="fa-solid fa-bag-shopping"></i> Mua ngay
-            </a>
-            <button type="submit" name="add_to_cart" value="1" class="btn btn-outline-success">
-              <i class="fas fa-cart-plus"></i> Thêm giỏ
+            <button id="buyNowBtn" data-id="<?= $product['id'] ?>" class="btn btn-outline-primary">
+              <span><i class="fa-solid fa-bag-shopping"></i></span>
+              Mua ngay
+            </button>
+            <button id="btnSubmit" type="submit" class="btn btn-outline-success">
+              <span><i class="fas fa-cart-plus"></i></span>
+              Thêm giỏ
             </button>
           </div>
         </form>
@@ -160,6 +170,92 @@ $related_result = $conn->query($related_sql);
   </div>
   <?php include("../layout/footer.php") ?>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+    integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="../assets/js/script.js"></script>
+  <?php if (isset($_SESSION['data_msg'])): ?>
+    <script>
+      let data = <?= $_SESSION['data_msg'] ?>;
+      showMessage(data);
+    </script>
+    <?php unset($_SESSION['data_msg']); ?>
+  <?php endif; ?>
+  <script>
+    $(document).ready(function() {
+
+      const btnLoader = makeButtonLoader($("#btnSubmit"));
+
+      $("#addToCartForm").on("submit", function(e) {
+        e.preventDefault();
+
+        $.ajax({
+          url: "../api/cart_api.php",
+          type: "POST",
+          data: $(this).serialize(),
+          dataType: "json",
+          beforeSend: () => {
+            btnLoader.showLoading();
+          },
+          complete: () => {
+            btnLoader.showDefault();
+          },
+          success: (data) => {
+            showMessage(data);
+            if (data.status === "success") {
+              $('#cartCount').text(data.cartCount);
+            }
+          },
+          error: (xhr, status, error) => {
+            Swal.fire({
+              icon: "error",
+              title: "Lỗi server",
+              text: "Không thể gửi yêu cầu. Vui lòng thử lại!",
+            });
+            console.error(error);
+          }
+        });
+      });
+
+      const csrfToken = '<?= $csrf_token ?>';
+      const btnLoaderBuyNow = makeButtonLoader($("#buyNowBtn"));
+
+      $("#buyNowBtn").on("click", function() {
+        const data = {
+          action: 'buy_now',
+          id: $(this).data('id'),
+          variant_id: $("variantSelect").val(),
+          csrf_token: csrfToken
+        }
+        $.ajax({
+          url: "../api/product_api.php",
+          type: "POST",
+          data: data,
+          dataType: "json",
+          beforeSend: () => {
+            btnLoaderBuyNow.showLoading();
+          },
+          complete: () => {
+            btnLoaderBuyNow.showDefault();
+          },
+          success: (data) => {
+            showMessage(data);
+            if (data.status === "success") {
+              location.href = "buy_now.php?id=" + $(this).data('id');
+            }
+          },
+          error: (xhr, status, error) => {
+            Swal.fire({
+              icon: "error",
+              title: "Lỗi server",
+              text: "Không thể gửi yêu cầu. Vui lòng thử lại!",
+            });
+            console.error(error);
+          }
+        });
+      });
+    });
+  </script>
 </body>
 
 </html>

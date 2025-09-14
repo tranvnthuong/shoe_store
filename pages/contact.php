@@ -178,6 +178,8 @@ $csrf_token = $_SESSION['csrf_token'];
   <script>
     AOS.init();
 
+    const btnLoader = makeButtonLoader($("#btnSubmit"));
+
     $(document).ready(function() {
       $("#contactForm").on("submit", function(e) {
         e.preventDefault();
@@ -187,11 +189,11 @@ $csrf_token = $_SESSION['csrf_token'];
           type: "POST",
           data: $(this).serialize(),
           dataType: "json",
-          beforeSend: function() {
-            showIconLoading($("#btnSubmit"));
+          beforeSend: () => {
+            btnLoader.showLoading();
           },
-          complete: function() {
-            showIcon($("#btnSubmit"), '<i class="fa fa-paper-plane"></i>');
+          complete: () => {
+            btnLoader.showDefault();
           },
           success: function(data) {
             showMessage(data);

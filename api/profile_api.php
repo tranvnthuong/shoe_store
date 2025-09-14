@@ -14,7 +14,7 @@ if (!hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'] ?? '')) {
     exit;
 }
 
-$userId = $_SESSION['user_id'];
+$user_id = $_SESSION['user_id'];
 $action = $_POST['action'];
 
 if (!$action) {
@@ -41,7 +41,7 @@ if ($action == "update_profile") {
 
     $sql = "UPDATE users SET full_name=?, day_of_birth=?, phone=?, address=? WHERE id=?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssi", $full_name, $day_of_birth, $phone, $address, $userId);
+    $stmt->bind_param("ssssi", $full_name, $day_of_birth, $phone, $address, $user_id);
     $stmt->execute();
 
     $_SESSION['full_name']    = $full_name;
@@ -78,7 +78,7 @@ if ($action == "change_password") {
 
     $sql = "SELECT password FROM users WHERE id=?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $userId);
+    $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
     $user = $result->fetch_assoc();
@@ -105,7 +105,7 @@ if ($action == "change_password") {
         //  $hashed = password_hash($new_password, PASSWORD_DEFAULT);
         $sql = "UPDATE users SET password=? WHERE id=?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("si", $new_password, $userId);
+        $stmt->bind_param("si", $new_password, $user_id);
         $stmt->execute();
         echo json_encode([
             "status" => "success",
@@ -128,7 +128,7 @@ if ($action == "deposit_money") {
     } else {
         $sql = "INSERT INTO nap_tien (user_id, so_tien, trang_thai) VALUES (?, ?, 'choduyet')";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ii", $userId, $amount);
+        $stmt->bind_param("ii", $user_id, $amount);
         if ($stmt->execute()) {
             echo json_encode([
                 "status" => "success",

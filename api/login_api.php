@@ -50,13 +50,13 @@ if ($user && $user['password'] == $password) {
     $stmt->bind_param("si", $token, $user['id']);
     $stmt->execute();
 
-    $_SESSION['login_msg'] = json_encode([
+    $_SESSION['data_msg'] = json_encode([
         "status" => "success",
         "msg" => "Đăng nhập thành công",
         "isToast" => true
     ]);
 
-    echo $_SESSION['login_msg'];
+    echo $_SESSION['data_msg'];
 } else {
     echo json_encode([
         "status" => "error",

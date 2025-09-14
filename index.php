@@ -8,10 +8,14 @@ $sql = "SELECT * FROM products
         LIMIT 12";
 $result = $conn->query($sql);
 
-include("configs/db.php");
-
 // Lấy tất cả slide từ bảng carousel_home
 $slides = $conn->query("SELECT * FROM carousel_home ORDER BY id DESC");
+
+// CSRF token
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['csrf_token'];
 ?>
 
 <!DOCTYPE html>
@@ -128,12 +132,14 @@ $slides = $conn->query("SELECT * FROM carousel_home ORDER BY id DESC");
                                 <?= number_format($row['price'], 0, ',', '.') ?> VND
                             </p>
                             <div class="mt-auto d-flex justify-content-between">
-                                <a href="./pages/buy_now.php?id=<?= $row['id'] ?>" class="btn btn-outline-primary">
-                                    <i class="fa-solid fa-bag-shopping"></i> Mua ngay
-                                </a>
-                                <a href="./pages/cart.php?add=<?= $row['id'] ?>" class="btn btn-outline-success">
-                                    <i class="fas fa-cart-plus"></i> Thêm giỏ
-                                </a>
+                                <button data-id="<?= $row['id'] ?>" class="btn btn-outline-primary buy-now">
+                                    <span><i class="fa-solid fa-bag-shopping"></i></span>
+                                    Mua ngay
+                                </button>
+                                <button data-id="<?= $row['id'] ?>" class="btn btn-outline-success add-to-cart">
+                                    <span><i class="fas fa-cart-plus"></i></span>
+                                    Thêm giỏ
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -145,44 +151,120 @@ $slides = $conn->query("SELECT * FROM carousel_home ORDER BY id DESC");
     <?php include("./layout/footer.php") ?>
     <script src="https://unpkg.com/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="assets/js/script.js"></script>
-    <?php if (isset($_SESSION['login_msg'])): ?>
+    <?php if (isset($_SESSION['data_msg'])): ?>
         <script>
-            let data = <?= $_SESSION['login_msg'] ?>;
+            let data = <?= $_SESSION['data_msg'] ?>;
             showMessage(data);
         </script>
-        <?php unset($_SESSION['login_msg']); ?>
+        <?php unset($_SESSION['data_msg']); ?>
     <?php endif; ?>
-
     <script>
-        let titles = ["DEAL NGON", "BÁN CHẠY", "MỚI VỀ", "GIÁ SỐC"];
-        let index = 0;
-        let element = document.getElementById("dynamic");
-        let speed = 100; // tốc độ gõ
-        let eraseSpeed = 50; // tốc độ xóa
-        let delay = 1000; // thời gian dừng giữa các từ
+        $(document).ready(function() {
+            let titles = ["DEAL NGON", "BÁN CHẠY", "MỚI VỀ", "GIÁ SỐC"];
+            let index = 0;
+            let speed = 100; // tốc độ gõ
+            let eraseSpeed = 50; // tốc độ xóa
+            let delay = 1000; // thời gian dừng giữa các từ
 
-        function typeText(text, i) {
-            if (i < text.length) {
-                element.innerHTML = text.substring(0, i + 1);
-                setTimeout(() => typeText(text, i + 1), speed);
-            } else {
-                setTimeout(() => eraseText(text, text.length - 1), delay);
+            function typeText(text, i) {
+                if (i < text.length) {
+                    $('#dynamic').html(text.substring(0, i + 1));
+                    setTimeout(() => typeText(text, i + 1), speed);
+                } else {
+                    setTimeout(() => eraseText(text, text.length - 1), delay);
+                }
             }
-        }
 
-        function eraseText(text, i) {
-            if (i >= 0) {
-                element.innerHTML = text.substring(0, i);
-                setTimeout(() => eraseText(text, i - 1), eraseSpeed);
-            } else {
-                index = (index + 1) % titles.length;
-                typeText(titles[index], 0);
+            function eraseText(text, i) {
+                if (i >= 0) {
+                    $('#dynamic').html(text.substring(0, i));
+                    setTimeout(() => eraseText(text, i - 1), eraseSpeed);
+                } else {
+                    index = (index + 1) % titles.length;
+                    typeText(titles[index], 0);
+                }
             }
-        }
 
-        typeText(titles[index], 0);
+            typeText(titles[index], 0);
+
+            const csrfToken = '<?= $csrf_token ?>';
+
+            $('.add-to-cart').on('click', function() {
+                const data = {
+                    action: 'add',
+                    id: $(this).data('id'),
+                    csrf_token: csrfToken
+                };
+                const btnLoader = makeButtonLoader($(this));
+                $.ajax({
+                    url: "api/cart_api.php",
+                    type: "POST",
+                    data: data,
+                    dataType: "json",
+                    beforeSend: () => {
+                        btnLoader.showLoading();
+                    },
+                    complete: () => {
+                        btnLoader.showDefault();
+                    },
+                    success: (data) => {
+                        showMessage(data);
+                        if (data.status === "success") {
+                            $('#cartCount').text(data.cartCount);
+                        }
+                    },
+                    error: (xhr, status, error) => {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Lỗi server",
+                            text: "Không thể gửi yêu cầu. Vui lòng thử lại!",
+                        });
+                        console.error(error);
+                    }
+                });
+            });
+
+            const btnLoaderBuyNow = makeButtonLoader($("#buyNowBtn"));
+
+            $(".buy-now").on("click", function() {
+                const data = {
+                    action: 'buy_now',
+                    id: $(this).data('id'),
+                    csrf_token: csrfToken
+                }
+                const btnLoader = makeButtonLoader($(this));
+                $.ajax({
+                    url: "api/product_api.php",
+                    type: "POST",
+                    data: data,
+                    dataType: "json",
+                    beforeSend: () => {
+                        btnLoader.showLoading();
+                    },
+                    complete: () => {
+                        btnLoader.showDefault();
+                    },
+                    success: (data) => {
+                        showMessage(data);
+                        if (data.status === "success") {
+                            location.href = "pages/buy_now.php?id=" + $(this).data('id');
+                        }
+                    },
+                    error: (xhr, status, error) => {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Lỗi server",
+                            text: "Không thể gửi yêu cầu. Vui lòng thử lại!",
+                        });
+                        console.error(error);
+                    }
+                });
+            });
+        });
     </script>
 </body>
 

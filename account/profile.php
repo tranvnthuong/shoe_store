@@ -303,6 +303,10 @@ $success = "";
         });
       }
 
+      const btnLoaderUpdateProfile = makeButtonLoader($("#updateProfileBtn"));
+      const btnLoaderChangePassword = makeButtonLoader($("#changePasswordBtn"));
+      const btnLoaderDeposit = makeButtonLoader($("#depositBtn"));
+
       $(".profile-form").on("submit", function(e) {
         e.preventDefault();
 
@@ -314,24 +318,22 @@ $success = "";
           beforeSend: () => {
             let action = $(this).find("input[name=action]").val();
             if (action == "update_profile") {
-              showIconLoading($("#updateProfileBtn"));
+              btnLoaderUpdateProfile.showLoading();
             } else if (action == "change_password") {
-              showIconLoading($("#changePasswordBtn"));
+              btnLoaderChangePassword.showLoading();
             } else if (action == "deposit_money") {
-              showIconLoading($("#depositBtn"));
+              btnLoaderDeposit.showLoading();
             }
             $(".modal").modal("hide");
           },
           complete: () => {
             let action = $(this).find("input[name=action]").val();
             if (action == "update_profile") {
-              showIcon($("#updateProfileBtn"),
-                '<i class="fa-solid fa-square-pen"></i>');
+              btnLoaderUpdateProfile.showDefault();
             } else if (action == "change_password") {
-              showIcon($("#changePasswordBtn"),
-                '<i class="fa-solid fa-lock"></i>');
+              btnLoaderChangePassword.showDefault();
             } else if (action == "deposit_money") {
-              showIcon($("#depositBtn"), '<i class="fa-solid fa-wallet"></i>');
+              btnLoaderDeposit.showDefault();
             }
           },
           success: (data) => {

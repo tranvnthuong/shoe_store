@@ -7,6 +7,12 @@ if (!isset($_SESSION['user_id'])) {
   exit;
 }
 
+// CSRF token
+if (empty($_SESSION['csrf_token'])) {
+  $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['csrf_token'];
+
 $user_id = $_SESSION['user_id'];
 // Xóa sản phẩm khỏi giỏ
 if (isset($_GET['remove'])) {
@@ -159,6 +165,12 @@ if (isset($_SESSION['coupon'])) {
     $coupon_code = $coupon['code'];
   }
 }
+
+// CSRF token
+if (empty($_SESSION['csrf_token'])) {
+  $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['csrf_token'];
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -178,72 +190,122 @@ if (isset($_SESSION['coupon'])) {
 <body>
   <?php include("../layout/header.php") ?>
   <div class="container" style="padding-top: 80px;">
-    <h2>🛒 Giỏ hàng của tôi</h2>
+    <h2 id="cartTitle">
+      <span><i class="fa-solid fa-cart-shopping"></i></span>
+      Giỏ hàng của tôi
+    </h2>
     <?php if (empty($items)): ?>
       <div class="alert alert-info">Giỏ hàng trống. <a href="products.php">Mua sắm ngay</a></div>
     <?php else: ?>
-      <form method="POST">
-        <table class="table table-bordered text-center">
-          <thead class="table-dark">
-            <tr>
-              <th>Ảnh</th>
-              <th>Tên sản phẩm</th>
-              <th>Giá</th>
-              <th>Số lượng</th>
-              <th>Thành tiền</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($items as $p): ?>
+      <form id="cartForm" method="POST">
+        <inpit type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
+          <table class="table table-bordered text-center">
+            <thead class="table-dark">
               <tr>
-                <td><img src="<?= $p['image'] ?>" width="80"></td>
-                <td><?= htmlspecialchars($p['name']) ?>
-                  <?php if ($p['variant_name']) echo " [" . htmlspecialchars($p['variant_name']) . "]"; ?>
-                </td>
-                <td><?= number_format($p['price'], 0, ',', '.') ?> VND</td>
-                <td><input type="number" name="qty[<?= $p['cart_id'] ?>]" value="<?= $p['quantity'] ?>" min="1"
-                    max="<?= $p['product_stock'] ?>" class="form-control w-50 mx-auto"></td>
-                <td><?= number_format($p['subtotal'], 0, ',', '.') ?> VND</td>
-                <td><a href="cart.php?remove=<?= $p['cart_id'] ?>" class="btn btn-sm btn-danger">Xóa</a></td>
+                <th>Ảnh</th>
+                <th>Tên sản phẩm</th>
+                <th>Giá</th>
+                <th>Số lượng</th>
+                <th>Thành tiền</th>
+                <th></th>
               </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
-        <!-- Coupon -->
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <input type="text" name="coupon" class="form-control" placeholder="Nhập mã giảm giá"
-              value="<?= $coupon_code ?>">
+            </thead>
+            <tbody>
+              <?php foreach ($items as $p): ?>
+                <tr>
+                  <td><img src="<?= $p['image'] ?>" width="80"></td>
+                  <td><?= htmlspecialchars($p['name']) ?>
+                    <?php if ($p['variant_name']) echo " [" . htmlspecialchars($p['variant_name']) . "]"; ?>
+                  </td>
+                  <td><?= number_format($p['price'], 0, ',', '.') ?> VND</td>
+                  <td>
+                    <input type="number" name="qty[<?= $p['cart_id'] ?>]" value="<?= $p['quantity'] ?>"
+                      min="1" max="<?= $p['product_stock'] ?>"
+                      class="form-control w-50 mx-auto input-qty">
+                  </td>
+                  <td><?= number_format($p['subtotal'], 0, ',', '.') ?> VND</td>
+                  <td><a href="cart.php?remove=<?= $p['cart_id'] ?>" class="btn btn-sm btn-danger">Xóa</a>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+          <!-- Coupon -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <input type="text" name="coupon" class="form-control" placeholder="Nhập mã giảm giá"
+                value="<?= $coupon_code ?>">
+            </div>
+            <div class="col-md-2">
+              <button type="submit" name="apply_coupon" class="btn btn-warning w-100">Áp dụng</button>
+            </div>
           </div>
-          <div class="col-md-2">
-            <button type="submit" name="apply_coupon" class="btn btn-warning w-100">Áp dụng</button>
-          </div>
-        </div>
-        <?= $msg ?? "" ?>
+          <?= $msg ?? "" ?>
 
-        <!-- Tổng tiền -->
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h5>Tạm tính: <?= number_format($total, 0, ',', '.') ?> VND</h5>
-            <?php if ($discount > 0): ?>
-              <h5>Giảm giá: -<?= number_format($discount, 0, ',', '.') ?> VND (<?= $coupon_code ?>)</h5>
-            <?php endif; ?>
-            <h4>Tổng thanh toán: <span class="text-danger"><?= number_format($total - $discount, 0, ',', '.') ?>
-                VND</span></h4>
-          </div>
+          <!-- Tổng tiền -->
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h5>Tạm tính: <span id="total"><?= number_format($total, 0, ',', '.') ?> VND</span></h5>
+              <?php if ($discount > 0): ?>
+                <h5>
+                  Giảm giá: -<span id="discount"><?= number_format($discount, 0, ',', '.') ?> VND</span>
+                  (<?= $coupon_code ?>)
+                </h5>
+              <?php endif; ?>
+              <h4>
+                Tổng thanh toán: <span id="final_total"
+                  class="text-danger"><?= number_format($total - $discount, 0, ',', '.') ?>
+                  VND</span>
+              </h4>
+            </div>
 
-          <div class="text-end">
-            <button type="submit" name="update" class="btn btn-primary">Cập nhật</button>
-            <a href="checkout.php" class="btn btn-success">Thanh toán</a>
+            <div class="text-end">
+              <button type="submit" name="update" class="btn btn-primary">Cập nhật</button>
+              <a href="checkout.php" class="btn btn-success">Thanh toán</a>
+            </div>
           </div>
-        </div>
       </form>
     <?php endif; ?>
   </div>
   <?php include("../layout/footer.php"); ?>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+    integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="../assets/js/script.js"></script>
+  <script>
+    $(document).ready(function() {
+      const btnLoader = makeButtonLoader($("#cartTitle"));
+
+      $("#cartForm").on("submit", function(e) {
+        e.preventDefault();
+
+        $.ajax({
+          url: "../api/cart_api.php",
+          type: "POST",
+          data: $(this).serialize(),
+          dataType: "json",
+          beforeSend: () => {
+            btnLoader.showLoading();
+          },
+          complete: () => {
+            btnLoader.showDefault();
+          },
+          success: (data) => {
+            showMessage(data);
+          },
+          error: (xhr, status, error) => {
+            Swal.fire({
+              icon: "error",
+              title: "Lỗi server",
+              text: "Không thể gửi yêu cầu. Vui lòng thử lại!",
+            });
+            console.error(error);
+          }
+        });
+      });
+    });
+  </script>
 </body>
 
 </html>

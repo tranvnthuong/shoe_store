@@ -49,6 +49,12 @@ $sql = "SELECT p.*, c.name as cat_name,
         ORDER BY $sortBy
         LIMIT $limit OFFSET $offset";
 $products = $conn->query($sql);
+// CSRF token
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['csrf_token'];
+
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -83,6 +89,11 @@ $products = $conn->query($sql);
     <?php include("../layout/footer.php"); ?>
     <script src="https://unpkg.com/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../assets/js/script.js"></script>
+    <?php include("../includes/product_script.php"); ?>
 </body>
 
 </html>
