@@ -3,12 +3,11 @@ session_start();
 include("../configs/db.php");
 
 if (!isset($_SESSION['user_id'])) {
-  header("Location: ../pages/login.php");
+  header("Location: ../account/login.php");
   exit;
 }
 
 $user_id = $_SESSION['user_id'];
-
 // Xóa sản phẩm khỏi giỏ
 if (isset($_GET['remove'])) {
   $id = intval($_GET['remove']);
@@ -98,7 +97,7 @@ if (isset($_POST['update'])) {
 // Lấy danh sách giỏ hàng
 $stmt = $conn->prepare("
   SELECT c.id as cart_id, c.quantity, 
-         p.id as product_id, p.name, p.image, p.price as base_price,
+         p.id as product_id, p.name, p.image, p.price as base_price, p.stock as product_stock,
          v.id as variant_id, v.name as variant_name, v.price as variant_price, v.stock as variant_stock
   FROM cart c
   JOIN products p ON p.id = c.product_id
@@ -204,7 +203,7 @@ if (isset($_SESSION['coupon'])) {
                 </td>
                 <td><?= number_format($p['price'], 0, ',', '.') ?> VND</td>
                 <td><input type="number" name="qty[<?= $p['cart_id'] ?>]" value="<?= $p['quantity'] ?>" min="1"
-                    class="form-control w-50 mx-auto"></td>
+                    max="<?= $p['product_stock'] ?>" class="form-control w-50 mx-auto"></td>
                 <td><?= number_format($p['subtotal'], 0, ',', '.') ?> VND</td>
                 <td><a href="cart.php?remove=<?= $p['cart_id'] ?>" class="btn btn-sm btn-danger">Xóa</a></td>
               </tr>

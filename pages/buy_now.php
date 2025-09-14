@@ -156,43 +156,52 @@ if (isset($_POST['checkout'])) {
 
         <form method="post">
             <table class="table table-bordered text-center">
-                <tr>
-                    <td><img src="<?= htmlspecialchars($product['image']) ?>" width="80"></td>
-                    <td><?= htmlspecialchars($product['name']) ?></td>
-                    <td>
-                        <?php
-                        $vs = $conn->query("SELECT id,name FROM product_variants WHERE product_id=" . (int)$product['product_id']);
-                        if ($vs->num_rows > 0): ?>
-                            <div class="d-flex align-items-center gap-2">
-                                <select name="variant_id" class="form-select">
-                                    <?php while ($v = $vs->fetch_assoc()): ?>
-                                        <option value="<?= $v['id'] ?>" <?= ($variant_id == $v['id'] ? 'selected' : '') ?>>
-                                            <?= htmlspecialchars($v['name']) ?>
-                                        </option>
-                                    <?php endwhile; ?>
-                                </select>
-                                <!-- Nút mở bảng size -->
-                                <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#sizeChartModal">
-                                    Bảng size
-                                </button>
-                            </div>
-                        <?php else: ?>
-                            <input type="hidden" name="variant_id" value="">
-                            Không có
-                        <?php endif; ?>
-                    </td>
-                    <td><input type="number" name="quantity" value="<?= $qty ?>" min="1" class="form-control w-50 mx-auto"></td>
-                    <td><?= number_format($product['price'], 0, ',', '.') ?> VND</td>
-                </tr>
+                <thead class="table-dark">
+                    <tr>
+                        <th>Ảnh</th>
+                        <th>Tên</th>
+                        <th>Phân loại</th>
+                        <th>Số lượng</th>
+                        <th>Giá</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><img src="<?= htmlspecialchars($product['image']) ?>" width="80"></td>
+                        <td><?= htmlspecialchars($product['name']) ?></td>
+                        <td>
+                            <?php
+                            $vs = $conn->query("SELECT id,name FROM product_variants WHERE product_id=" . (int)$product['product_id']);
+                            if ($vs->num_rows > 0): ?>
+                                <div class="d-flex align-items-center gap-2">
+                                    <select name="variant_id" class="form-select">
+                                        <?php while ($v = $vs->fetch_assoc()): ?>
+                                            <option value="<?= $v['id'] ?>" <?= ($variant_id == $v['id'] ? 'selected' : '') ?>>
+                                                <?= htmlspecialchars($v['name']) ?>
+                                            </option>
+                                        <?php endwhile; ?>
+                                    </select>
+                                    <!-- Nút mở bảng size -->
+                                    <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#sizeChartModal">
+                                        Bảng size
+                                    </button>
+                                </div>
+                            <?php else: ?>
+                                <input type="hidden" name="variant_id" value="">
+                                Không có
+                            <?php endif; ?>
+                        </td>
+                        <td><span><?= $qty ?> </span></td>
+                        <td><?= number_format($product['price'], 0, ',', '.') ?> VND</td>
+                    </tr>
+                </tbody>
             </table>
-
-            <div class="mb-3">
-                <input type="text" name="coupon" placeholder="Mã giảm giá" class="form-control d-inline w-auto">
-                <button name="apply_coupon" class="btn btn-outline-primary">Áp dụng</button>
-            </div>
+            <input type="hidden" name="quantity" value="<?= $qty ?>" class="form-control w-50 mx-auto">
             <div class="mb-3">
                 <label>Địa chỉ giao hàng</label>
-                <input type="text" name="address" value="<?= htmlspecialchars($address) ?>" class="form-control" required>
+                <input type="text" name="address" value="<?= htmlspecialchars($address) ?>" class="form-control"
+                    required>
             </div>
             <div class="mb-3">
                 <label>SĐT</label>
@@ -211,39 +220,71 @@ if (isset($_POST['checkout'])) {
 
     <!-- Modal bảng size -->
     <div class="modal fade" id="sizeChartModal" tabindex="-1" aria-labelledby="sizeChartLabel" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="sizeChartLabel">Bảng size giày tham khảo</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-          </div>
-          <div class="modal-body">
-            <table class="table table-bordered text-center">
-              <thead class="table-light">
-                <tr>
-                  <th>Size (VN)</th>
-                  <th>Size (US)</th>
-                  <th>Size (EU)</th>
-                  <th>Chiều dài chân (cm)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td>38</td><td>6</td><td>39</td><td>24.0</td></tr>
-                <tr><td>39</td><td>7</td><td>40</td><td>24.5</td></tr>
-                <tr><td>40</td><td>7.5</td><td>41</td><td>25.0</td></tr>
-                <tr><td>41</td><td>8</td><td>42</td><td>25.5</td></tr>
-                <tr><td>42</td><td>9</td><td>43</td><td>26.0</td></tr>
-                <tr><td>43</td><td>10</td><td>44</td><td>27.0</td></tr>
-              </tbody>
-            </table>
-            <p class="text-muted text-center">⚠️ Lưu ý: Bảng size chỉ mang tính chất tham khảo, có thể chênh lệch tuỳ mẫu giày.</p>
-          </div>
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sizeChartLabel">Bảng size giày tham khảo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered text-center">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Size (VN)</th>
+                                <th>Size (US)</th>
+                                <th>Size (EU)</th>
+                                <th>Chiều dài chân (cm)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>38</td>
+                                <td>6</td>
+                                <td>39</td>
+                                <td>24.0</td>
+                            </tr>
+                            <tr>
+                                <td>39</td>
+                                <td>7</td>
+                                <td>40</td>
+                                <td>24.5</td>
+                            </tr>
+                            <tr>
+                                <td>40</td>
+                                <td>7.5</td>
+                                <td>41</td>
+                                <td>25.0</td>
+                            </tr>
+                            <tr>
+                                <td>41</td>
+                                <td>8</td>
+                                <td>42</td>
+                                <td>25.5</td>
+                            </tr>
+                            <tr>
+                                <td>42</td>
+                                <td>9</td>
+                                <td>43</td>
+                                <td>26.0</td>
+                            </tr>
+                            <tr>
+                                <td>43</td>
+                                <td>10</td>
+                                <td>44</td>
+                                <td>27.0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="text-muted text-center">⚠️ Lưu ý: Bảng size chỉ mang tính chất tham khảo, có thể chênh
+                        lệch tuỳ mẫu giày.</p>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
 
     <?php include("../layout/footer.php"); ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

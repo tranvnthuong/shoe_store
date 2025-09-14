@@ -73,61 +73,12 @@ $brands = $conn->query("SELECT * FROM brands");
         integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href="../assets/css/style.css" rel="stylesheet">
-    <style>
-        .product-card {
-            transition: all 0.3s;
-        }
-
-        .product-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .product-img {
-            height: 220px;
-            object-fit: cover;
-        }
-    </style>
 </head>
 
 <body>
     <?php include("../layout/header.php") ?>
     <div class="container" style="padding-top: 80px;">
         <h2 class="mb-4">🔎 Kết quả tìm kiếm</h2>
-
-        <!-- Form filter -->
-        <form method="GET" class="row g-2 mb-4">
-            <div class="col-md-3">
-                <input type="text" name="q" value="<?= htmlspecialchars($q) ?>" class="form-control"
-                    placeholder="Tên sản phẩm...">
-            </div>
-            <div class="col-md-2">
-                <select name="category" class="form-select">
-                    <option value="0">--Danh mục--</option>
-                    <?php while ($c = $cats->fetch_assoc()): ?>
-                        <option value="<?= $c['id'] ?>" <?= $cat == $c['id'] ? 'selected' : '' ?>><?= $c['name'] ?></option>
-                    <?php endwhile; ?>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <select name="brand" class="form-select">
-                    <option value="0">--Thương hiệu--</option>
-                    <?php while ($b = $brands->fetch_assoc()): ?>
-                        <option value="<?= $b['id'] ?>" <?= $brand == $b['id'] ? 'selected' : '' ?>><?= $b['name'] ?>
-                        </option>
-                    <?php endwhile; ?>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <input type="number" name="min" value="<?= $min ?>" class="form-control" placeholder="Giá từ">
-            </div>
-            <div class="col-md-2">
-                <input type="number" name="max" value="<?= $max ?>" class="form-control" placeholder="Đến">
-            </div>
-            <div class="col-md-1">
-                <button class="btn btn-primary w-100">Lọc</button>
-            </div>
-        </form>
 
         <div class="row g-4">
             <?php if ($result->num_rows == 0): ?>
@@ -152,6 +103,8 @@ $brands = $conn->query("SELECT * FROM brands");
         </div>
     </div>
     <?php include("../layout/footer.php") ?>
+    <script src="https://unpkg.com/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

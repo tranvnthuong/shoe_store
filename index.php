@@ -87,25 +87,27 @@ $slides = $conn->query("SELECT * FROM carousel_home ORDER BY id DESC");
         </div>
 
         <!-- Sản phẩm HOT -->
-        <div class="row g-4">
-            <div class="text-center mt-5 mb-2">
-                <h2>
-                    <span> SẢN PHẨM </span><span id="dynamic" class="text-danger typing"></span>
-                </h2>
-                <div class="decor-line">
-                    <i class="fas fa-diamond mx-1"></i>
-                    <i class="fas fa-diamond mx-0"></i>
-                    <i class="fas fa-diamond mx-1"></i>
-                </div>
+        <div class="text-center mt-5 mb-2">
+            <h2>
+                <span> SẢN PHẨM </span><span id="dynamic" class="text-danger typing"></span>
+            </h2>
+            <div class="decor-line">
+                <i class="fas fa-diamond mx-1"></i>
+                <i class="fas fa-diamond mx-0"></i>
+                <i class="fas fa-diamond mx-1"></i>
             </div>
+        </div>
 
-            <div class="d-flex justify-content-end">
-                <a href="./pages/products.php" class="btn btn-outline-primary">
-                    Xem tất cả
-                </a>
-            </div>
+        <div class="d-flex justify-content-end mb-3">
+            <a href="./pages/products.php" class="btn btn-outline-primary">
+                Xem tất cả
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="row g-2" data-masonry='{"itemSelector": ".grid-item", "percentPosition": true }'>
             <?php while ($row = $result->fetch_assoc()): ?>
-                <div class="col-md-3 col-sm-6">
+                <div class="grid-item col-sm-6 col-md-4 col-lg-3">
                     <div class="card h-100 shadow-sm">
                         <a href="./pages/product_detail.php?id=<?= $row['id'] ?>">
                             <img src="<?= htmlspecialchars($row['image']) ?>" class="card-img-top"
@@ -141,9 +143,19 @@ $slides = $conn->query("SELECT * FROM carousel_home ORDER BY id DESC");
     </div>
 
     <?php include("./layout/footer.php") ?>
+    <script src="https://unpkg.com/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="assets/js/script.js"></script>
+    <?php if (isset($_SESSION['login_msg'])): ?>
+        <script>
+            let data = <?= $_SESSION['login_msg'] ?>;
+            showMessage(data);
+        </script>
+        <?php unset($_SESSION['login_msg']); ?>
+    <?php endif; ?>
 
     <script>
-        // Lấy danh sách từ PHP ra JS
         let titles = ["DEAL NGON", "BÁN CHẠY", "MỚI VỀ", "GIÁ SỐC"];
         let index = 0;
         let element = document.getElementById("dynamic");
@@ -170,10 +182,8 @@ $slides = $conn->query("SELECT * FROM carousel_home ORDER BY id DESC");
             }
         }
 
-        // Bắt đầu hiệu ứng
         typeText(titles[index], 0);
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

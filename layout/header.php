@@ -11,8 +11,15 @@ $display_name = isset($_SESSION['full_name']) && $_SESSION['full_name'] !== ''
 // Đếm giỏ hàng
 // Tsst
 $cart_count = 0;
-if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
-    foreach ($_SESSION['cart'] as $q) $cart_count += (int)$q;
+$user_id = $_SESSION['user_id'] ?? null;
+if (!empty($user_id)) {
+    $stmt = $conn->prepare("SELECT SUM(quantity) FROM cart WHERE user_id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $stmt->bind_result($total_quantity);
+    $stmt->fetch();
+    $stmt->close();
+    $cart_count = $total_quantity ?? 0;
 }
 $current_page = basename($_SERVER['PHP_SELF']);
 ?>
@@ -34,7 +41,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <li class="nav-item">
                     <a class="nav-link <?= (in_array($current_page, ['products.php'])) ? 'active' : '' ?>"
                         href="<?= $base_url ?>/pages/products.php">
-                        <span>Tất cả sản phẩm</span>
+                        <span>Sản phẩm</span>
                     </a>
                 </li>
 
@@ -98,7 +105,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         <li><a class="dropdown-item" href="<?= $base_url ?>/pages/phukien.php?type=xitkhumui">Xịt
                                 khử mùi</a></li>
                         <li><a class="dropdown-item" href="<?= $base_url ?>/pages/phukien.php?type=tat">Tất
-                        </a></li>
+                            </a></li>
                     </ul>
                 </li>
 
@@ -118,23 +125,25 @@ $current_page = basename($_SERVER['PHP_SELF']);
             </ul>
 
             <!-- Bộ lọc sản phẩm -->
-            <div class="dropdown me-3">
-                <button class="btn btn-sm btn-outline-warning dropdown-toggle" type="button" id="filterDropdown"
-                    data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-funnel"></i> Lọc
-                </button>
-                <div class="dropdown-menu dropdown-menu-end p-3 shadow" style="min-width: 250px;">
-                    <form method="GET" action="<?= $base_url ?>/pages/products.php">
+            <form id="filterForm" class="d-flex align-items-center ms-lg-3" method="GET"
+                action="<?= $base_url ?>/pages/products.php">
+                <div class="dropdown me-3">
+                    <button class="btn btn-sm btn-outline-warning dropdown-toggle" type="button" id="filterDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-funnel"></i> Lọc
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-3 shadow" style="min-width: 250px;">
+
                         <div class="mb-2">
                             <label class="form-label small mb-1">Danh mục</label>
-                            <select name="category" class="form-select form-select-sm">
+                            <select name="category_id" class="form-select form-select-sm">
                                 <option value="0">Tất cả</option>
                                 <?php
                                 $cate = $conn->query("SELECT * FROM categories");
                                 while ($c = $cate->fetch_assoc()):
                                 ?>
                                     <option value="<?= $c['id'] ?>"
-                                        <?= (isset($_GET['category']) && $_GET['category'] == $c['id']) ? 'selected' : '' ?>>
+                                        <?= (isset($_GET['category_id']) && $_GET['category_id'] == $c['id']) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($c['name']) ?>
                                     </option>
                                 <?php endwhile; ?>
@@ -159,30 +168,44 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                 </option>
                             </select>
                         </div>
-
-                        <button type="submit" class="btn btn-sm btn-warning w-100">
-                            <i class="fas fa-filter"></i> Áp dụng
-                        </button>
-                    </form>
+                        <div class="mb-2 d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-warning w-100">
+                                <i class="fas fa-filter"></i> Áp dụng
+                            </button>
+                            <button type="button" id="resetFormBtn" class="btn btn-sm btn-secondary w-100">
+                                <i class="fas fa-rotate-left"></i> Đặt lại
+                            </button>
+                            <script>
+                                document.getElementById('resetFormBtn').addEventListener('click', () => {
+                                    window.history.replaceState({}, document.title, window.location.pathname);
+                                    document.getElementById('filterForm').reset();
+                                    document.querySelector("[name='category_id']").selectedIndex = 0;
+                                    document.querySelector("[name='sort']").selectedIndex = 0;
+                                });
+                            </script>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Tìm kiếm -->
-            <form class="d-flex me-3" action="<?= $base_url ?>/pages/products.php" method="get">
-                <input class="form-control form-control-sm me-2" type="search" name="q" placeholder="Bạn cần tìm gì?"
+                <!-- Tìm kiếm -->
+                <input class="form-control form-control-sm me-2" type="search" name="q" placeholder="Bạn cần tìm gì..."
                     aria-label="Search" value="<?= isset($_GET['q']) ? htmlspecialchars($_GET['q']) : '' ?>">
+
                 <button class="btn btn-sm btn-outline-light" type="submit"><i class="fas fa-search"></i></button>
             </form>
 
             <!-- Giỏ hàng -->
-            <a href="<?= $base_url ?>/pages/cart.php" class="text-light position-relative me-3 fs-5" title="Giỏ hàng">
-                <i class="fas fa-shopping-cart"></i>
-                <?php if ($cart_count > 0): ?>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                        <?= $cart_count ?>
-                    </span>
-                <?php endif; ?>
-            </a>
+            <div class="d-flex align-items-center px-2 py-2">
+                <a href="<?= $base_url ?>/pages/cart.php" class="text-light position-relative me-3 fs-5"
+                    title="Giỏ hàng">
+                    <i class="fas fa-shopping-cart"></i>
+                    <?php if ($cart_count > 0): ?>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            <?= $cart_count ?>
+                        </span>
+                    <?php endif; ?>
+                </a>
+            </div>
 
             <!-- Dropdown tài khoản -->
             <ul class="navbar-nav">

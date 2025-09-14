@@ -1,4 +1,4 @@
-<?php 
+<?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 include("../configs/db.php");
 
@@ -14,7 +14,7 @@ $user_id = $_SESSION['user_id'];
 $status_filter = isset($_GET['status']) ? $_GET['status'] : "";
 
 // Truy vấn đơn hàng
-if ($status_filter && in_array($status_filter, ['pending','processing','shipping','completed','returned','canceled'])) {
+if ($status_filter && in_array($status_filter, ['pending', 'processing', 'shipping', 'completed', 'returned', 'canceled'])) {
   $sql = "SELECT * FROM orders WHERE user_id = ? AND status = ? ORDER BY created_at DESC";
   $stmt = $conn->prepare($sql);
   $stmt->bind_param("is", $user_id, $status_filter);
@@ -35,10 +35,14 @@ $result = $stmt->get_result();
   <title>Đơn hàng - Shoe Store</title>
   <link rel="icon" type="image/x-icon" href="../favicon.ico">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    crossorigin="anonymous" />
   <link href="../assets/css/style.css" rel="stylesheet">
   <style>
-    body { background: #f5f7fa; }
+    body {
+      background: #f5f7fa;
+    }
+
     .order-card {
       border-radius: 16px;
       background: #fff;
@@ -49,7 +53,14 @@ $result = $stmt->get_result();
       transform: translateY(20px);
       animation: fadeUp 0.6s ease forwards;
     }
-    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .order-header {
       padding: 15px;
       background: linear-gradient(135deg, #36d1dc, #5b86e5);
@@ -59,11 +70,33 @@ $result = $stmt->get_result();
       justify-content: space-between;
       align-items: center;
     }
-    .order-body { padding: 15px; }
-    .order-body .info-item { margin-bottom: 8px; font-size: 15px; }
-    .order-body .info-item i { margin-right: 6px; color: #007bff; }
-    .order-footer { padding: 12px 15px; background: #f9fafc; text-align: right; }
-    .status-badge { font-size: 14px; padding: 6px 12px; border-radius: 12px; font-weight: 600; }
+
+    .order-body {
+      padding: 15px;
+    }
+
+    .order-body .info-item {
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .order-body .info-item i {
+      margin-right: 6px;
+      color: #007bff;
+    }
+
+    .order-footer {
+      padding: 12px 15px;
+      background: #f9fafc;
+      text-align: right;
+    }
+
+    .status-badge {
+      font-size: 14px;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
   </style>
 </head>
 
@@ -78,12 +111,18 @@ $result = $stmt->get_result();
         <div class="col-md-4">
           <select name="status" class="form-select" onchange="this.form.submit()">
             <option value="">-- Tất cả trạng thái --</option>
-            <option value="pending" <?= $status_filter=="pending"?"selected":"" ?>>⏳ Chờ xác nhận</option>
-            <option value="processing" <?= $status_filter=="processing"?"selected":"" ?>>📦 Chờ lấy hàng</option>
-            <option value="shipping" <?= $status_filter=="shipping"?"selected":"" ?>>🚚 Đang giao</option>
-            <option value="completed" <?= $status_filter=="completed"?"selected":"" ?>>✅ Đã giao</option>
-            <option value="returned" <?= $status_filter=="returned"?"selected":"" ?>>↩️ Trả hàng</option>
-            <option value="canceled" <?= $status_filter=="canceled"?"selected":"" ?>>❌ Đã hủy</option>
+            <option value="pending" <?= $status_filter == "pending" ? "selected" : "" ?>>⏳ Chờ xác nhận
+            </option>
+            <option value="processing" <?= $status_filter == "processing" ? "selected" : "" ?>>📦 Chờ lấy
+              hàng
+            </option>
+            <option value="shipping" <?= $status_filter == "shipping" ? "selected" : "" ?>>🚚 Đang giao
+            </option>
+            <option value="completed" <?= $status_filter == "completed" ? "selected" : "" ?>>✅ Đã giao
+            </option>
+            <option value="returned" <?= $status_filter == "returned" ? "selected" : "" ?>>↩️ Trả hàng
+            </option>
+            <option value="canceled" <?= $status_filter == "canceled" ? "selected" : "" ?>>❌ Đã hủy</option>
           </select>
         </div>
       </div>
@@ -93,11 +132,13 @@ $result = $stmt->get_result();
       <?php while ($row = $result->fetch_assoc()): ?>
         <?php
         $order_id = $row['id'];
-
         // Truy vấn tổng tiền & số sản phẩm
-        $sql_items = "SELECT SUM(price * quantity) AS total, SUM(quantity) AS items FROM order_items WHERE order_id = ?";
+        $sql_items = "SELECT o.total_price AS total, SUM(oi.quantity) AS items
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.id
+        WHERE oi.order_id = ?";
         $stmt_items = $conn->prepare($sql_items);
-        $stmt_items->bind_param("i", $order_id);
+        $stmt_items->bind_param("i",  $order_id);
         $stmt_items->execute();
         $total_res = $stmt_items->get_result()->fetch_assoc();
         $total = $total_res['total'] ?? 0;
@@ -109,17 +150,23 @@ $result = $stmt->get_result();
         // Hiển thị trạng thái
         switch ($row['status']) {
           case 'pending':
-            $status = '<span class="status-badge bg-warning text-dark">⏳ Chờ xác nhận</span>'; break;
+            $status = '<span class="status-badge bg-warning text-dark">⏳ Chờ xác nhận</span>';
+            break;
           case 'processing':
-            $status = '<span class="status-badge bg-info text-white">📦 Chờ lấy hàng</span>'; break;
+            $status = '<span class="status-badge bg-info text-white">📦 Chờ lấy hàng</span>';
+            break;
           case 'shipping':
-            $status = '<span class="status-badge bg-primary text-white">🚚 Đang giao</span>'; break;
+            $status = '<span class="status-badge bg-primary text-white">🚚 Đang giao</span>';
+            break;
           case 'completed':
-            $status = '<span class="status-badge bg-success text-white">✅ Đã giao</span>'; break;
+            $status = '<span class="status-badge bg-success text-white">✅ Đã giao</span>';
+            break;
           case 'returned':
-            $status = '<span class="status-badge bg-secondary text-white">↩️ Trả hàng</span>'; break;
+            $status = '<span class="status-badge bg-secondary text-white">↩️ Trả hàng</span>';
+            break;
           case 'canceled':
-            $status = '<span class="status-badge bg-danger text-white">❌ Đã hủy</span>'; break;
+            $status = '<span class="status-badge bg-danger text-white">❌ Đã hủy</span>';
+            break;
           default:
             $status = '<span class="status-badge bg-dark text-white">Không rõ</span>';
         }
@@ -132,8 +179,11 @@ $result = $stmt->get_result();
           <div class="order-body">
             <div class="info-item"><i class="fa fa-calendar"></i> Ngày đặt: <?= $order_date ?></div>
             <div class="info-item"><i class="fa fa-list"></i> Sản phẩm: <strong><?= $items_count ?></strong></div>
-            <div class="info-item"><i class="fa fa-coins"></i> Tổng tiền: <strong><?= number_format($total, 0, ',', '.') ?> VND</strong></div>
-            <div class="info-item"><i class="fa fa-credit-card"></i> Thanh toán: <?= htmlspecialchars($row['payment_method']) ?></div>
+            <div class="info-item"><i class="fa fa-coins"></i> Tổng tiền:
+              <strong><?= number_format($total, 0, ',', '.') ?> VND</strong>
+            </div>
+            <div class="info-item"><i class="fa fa-credit-card"></i> Thanh toán:
+              <?= htmlspecialchars($row['payment_method']) ?></div>
           </div>
           <div class="order-footer">
             <a href="order_details.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-primary">
@@ -150,4 +200,5 @@ $result = $stmt->get_result();
   <?php include("../layout/footer.php") ?>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
