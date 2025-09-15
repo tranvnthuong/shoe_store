@@ -4,53 +4,53 @@ include("../configs/db.php");
 
 // Chỉ cho admin truy cập
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-  header("Location: ../user/login.php");
-  exit;
+    header("Location: ../user/login.php");
+    exit;
 }
 
 // Duyệt nạp
 if (isset($_GET['approve'])) {
-  $id = intval($_GET['approve']);
+    $id = intval($_GET['approve']);
 
-  // Lấy thông tin yêu cầu
-  $sql = "SELECT * FROM nap_tien WHERE id=? AND trang_thai='choduyet'";
-  $stmt = $conn->prepare($sql);
-  $stmt->bind_param("i", $id);
-  $stmt->execute();
-  $deposit = $stmt->get_result()->fetch_assoc();
+    // Lấy thông tin yêu cầu
+    $sql = "SELECT * FROM nap_tien WHERE id=? AND trang_thai='choduyet'";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $deposit = $stmt->get_result()->fetch_assoc();
 
-  if ($deposit) {
-    $conn->begin_transaction();
-    try {
-      // Cộng tiền cho user
-      $sql = "UPDATE users SET balance = balance + ? WHERE id=?";
-      $stmt = $conn->prepare($sql);
-      $stmt->bind_param("di", $deposit['so_tien'], $deposit['user_id']);
-      $stmt->execute();
+    if ($deposit) {
+        $conn->begin_transaction();
+        try {
+            // Cộng tiền cho user
+            $sql = "UPDATE users SET balance = balance + ? WHERE id=?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("di", $deposit['so_tien'], $deposit['user_id']);
+            $stmt->execute();
 
-      // Đánh dấu đã duyệt
-      $sql = "UPDATE nap_tien SET trang_thai='thanhcong' WHERE id=?";
-      $stmt = $conn->prepare($sql);
-      $stmt->bind_param("i", $id);
-      $stmt->execute();
+            // Đánh dấu đã duyệt
+            $sql = "UPDATE nap_tien SET trang_thai='thanhcong' WHERE id=?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
 
-      $conn->commit();
-      $success = "Đã nạp";
-    } catch (Exception $e) {
-      $conn->rollback();
-      die("Lỗi khi duyệt nạp: " . $e->getMessage());
+            $conn->commit();
+            $success = "Đã nạp";
+        } catch (Exception $e) {
+            $conn->rollback();
+            die("Lỗi khi duyệt nạp: " . $e->getMessage());
+        }
     }
-  }
 }
 
 // Hủy nạp
 if (isset($_GET['reject'])) {
-  $id = intval($_GET['reject']);
-  $sql = "UPDATE nap_tien SET trang_thai='thatbai' WHERE id=? AND trang_thai='choduyet'";
-  $stmt = $conn->prepare($sql);
-  $stmt->bind_param("i", $id);
-  $stmt->execute();
-  $error = "Đã hủy đơn nạp";
+    $id = intval($_GET['reject']);
+    $sql = "UPDATE nap_tien SET trang_thai='thatbai' WHERE id=? AND trang_thai='choduyet'";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $error = "Đã hủy đơn nạp";
 }
 
 // Lấy danh sách yêu cầu
@@ -79,19 +79,19 @@ $result = $conn->query($sql);
     <div class="container-fluid">
         <div class="row">
             <?php include("../layout/admin_header.php") ?>
-            <main class="col-md-10 ms-sm-auto col-lg-10 px-md-4 content">
-                <h2>Duyệt yêu cầu nạp tiền</h2>
+            <main class="col-12 col-md-10 ms-sm-auto px-md-4 dashboard-content">
+                <h2 class="mb-4"><i class="fa-solid fa-credit-card"></i> Duyệt yêu cầu nạp tiền</h2>
 
                 <?php if (!empty($success)): ?>
-                <div class="alert alert-success"><?= $success ?></div>
+                    <div class="alert alert-success"><?= $success ?></div>
                 <?php endif; ?>
 
                 <?php if (!empty($error)): ?>
-                <div class="alert alert-danger"><?= $error ?></div>
+                    <div class="alert alert-danger"><?= $error ?></div>
                 <?php endif; ?>
                 <div class="table-list-manage" style="max-height: 85vh;">
                     <table class="table table-bordered table-striped">
-                        <thead>
+                        <thead class="table-dark">
                             <tr>
                                 <th>ID</th>
                                 <th>Người dùng</th>
@@ -104,30 +104,30 @@ $result = $conn->query($sql);
                         </thead>
                         <tbody>
                             <?php while ($row = $result->fetch_assoc()): ?>
-                            <tr>
-                                <td><?= $row['id'] ?></td>
-                                <td><?= htmlspecialchars($row['full_name']) ?></td>
-                                <td><?= htmlspecialchars($row['email']) ?></td>
-                                <td><?= number_format($row['so_tien'], 0, ',', '.') ?> VND</td>
-                                <td>
-                                    <?php if ($row['trang_thai'] == 'choduyet'): ?>
-                                    <span class="badge bg-warning">Chờ duyệt</span>
-                                    <?php elseif ($row['trang_thai'] == 'thanhcong'): ?>
-                                    <span class="badge bg-success">Thành công</span>
-                                    <?php else: ?>
-                                    <span class="badge bg-danger">Thất bại</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td><?= $row['created_at'] ?></td>
-                                <td>
-                                    <?php if ($row['trang_thai'] == 'choduyet'): ?>
-                                    <a href="?approve=<?= $row['id'] ?>" class="btn btn-sm btn-success">✔ Duyệt</a>
-                                    <a href="?reject=<?= $row['id'] ?>" class="btn btn-sm btn-danger">✘ Hủy</a>
-                                    <?php else: ?>
-                                    <em>Đã xử lý</em>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td><?= $row['id'] ?></td>
+                                    <td><?= htmlspecialchars($row['full_name']) ?></td>
+                                    <td><?= htmlspecialchars($row['email']) ?></td>
+                                    <td><?= number_format($row['so_tien'], 0, ',', '.') ?> VND</td>
+                                    <td>
+                                        <?php if ($row['trang_thai'] == 'choduyet'): ?>
+                                            <span class="badge bg-warning">Chờ duyệt</span>
+                                        <?php elseif ($row['trang_thai'] == 'thanhcong'): ?>
+                                            <span class="badge bg-success">Thành công</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-danger">Thất bại</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?= $row['created_at'] ?></td>
+                                    <td>
+                                        <?php if ($row['trang_thai'] == 'choduyet'): ?>
+                                            <a href="?approve=<?= $row['id'] ?>" class="btn btn-sm btn-success">✔ Duyệt</a>
+                                            <a href="?reject=<?= $row['id'] ?>" class="btn btn-sm btn-danger">✘ Hủy</a>
+                                        <?php else: ?>
+                                            <em>Đã xử lý</em>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
                             <?php endwhile; ?>
                         </tbody>
                     </table>

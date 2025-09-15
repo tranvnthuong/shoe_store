@@ -60,7 +60,7 @@ $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 <body>
     <div class="container my-5">
-        <h2>📦 Quản trị - Đơn hàng #<?= $order['id'] ?></h2>
+        <h2 class="mb-4">Chi tiết đơn hàng #<?= $order['id'] ?></h2>
 
         <?php if (isset($msg)) echo $msg; ?>
 

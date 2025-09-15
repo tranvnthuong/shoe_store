@@ -131,8 +131,8 @@ $list = $conn->query("SELECT * FROM carousel_home ORDER BY id DESC");
     <div class="container-fluid">
         <div class="row">
             <?php include("../layout/admin_header.php") ?>
-            <main class="col-md-10 ms-sm-auto col-lg-10 px-md-4 content">
-                <h3>Quản lý Slider Trang chủ</h3>
+            <main class="col-12 col-md-10 ms-sm-auto px-md-4 dashboard-content">
+                <h2 class="mb-4"><i class="fa-solid fa-images"></i> Quản lý Slider Trang chủ</h2>
 
                 <!-- Form thêm -->
                 <form method="post" enctype="multipart/form-data" class="mb-4">

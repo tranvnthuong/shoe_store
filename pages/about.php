@@ -239,25 +239,33 @@
         </div>
     </div>
     <?php include("../layout/footer.php"); ?>
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
+    function formatVND(n) {
+        return n.toLocaleString("vi-VN", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+    }
+
     AOS.init();
 
     // Counter animation
     const counters = document.querySelectorAll('.counter');
     counters.forEach(counter => {
         counter.innerText = '0';
+        const intervalDelay = counter.getAttribute('data-interval-delay') ?? 20;
+        const suffix = counter.getAttribute('data-suffix') ?? '';
         const updateCounter = () => {
             const target = +counter.getAttribute('data-target');
             const c = +counter.innerText;
             const increment = target / 200;
             if (c < target) {
                 counter.innerText = Math.ceil(c + increment);
-                setTimeout(updateCounter, 20);
+                setTimeout(updateCounter, intervalDelay);
             } else {
-                counter.innerText = target;
+                counter.innerText = formatVND(target) + suffix;
             }
         };
         updateCounter();

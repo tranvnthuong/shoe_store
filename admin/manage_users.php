@@ -161,7 +161,7 @@ $result = $conn->query("SELECT * FROM users ORDER BY created_at DESC");
     <div class="container-fluid">
         <div class="row">
             <?php include("../layout/admin_header.php") ?>
-            <main class="col-md-10 ms-sm-auto col-lg-10 px-md-4 content">
+            <main class="col-12 col-md-10 ms-sm-auto px-md-4 dashboard-content">
                 <?php if (isset($msg)): ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <span><?= $msg ?></span>
@@ -169,7 +169,7 @@ $result = $conn->query("SELECT * FROM users ORDER BY created_at DESC");
                     </div>
                 <?php endif; ?>
 
-                <h2 class="mb-4">👥 Quản lý người dùng</h2>
+                <h2 class="mb-4"><i class="fa-solid fa-users-gear"></i> Quản lý người dùng</h2>
 
                 <div class="mb-3 d-flex justify-content-end gap-2">
                     <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">

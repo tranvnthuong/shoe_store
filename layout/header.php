@@ -230,7 +230,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                     <hr class="dropdown-divider">
                                 </li>
                                 <li>
-                                    <a class="dropdown-item active" href="<?= $base_url ?>/admin/dashboard.php">
+                                    <a class="dropdown-item active" href="<?= $base_url ?>/admin/statistics.php">
                                         Bảng điều khiển
                                     </a>
                                 </li>

@@ -55,8 +55,8 @@ $result = $conn->query($sql);
     <div class="container-fluid">
         <div class="row">
             <?php include("../layout/admin_header.php") ?>
-            <main class="col-md-10 ms-sm-auto col-lg-10 px-md-4 content">
-                <h2 class="mb-4">📦 Quản lý đơn hàng</h2>
+            <main class="col-12 col-md-10 ms-sm-auto px-md-4 dashboard-content">
+                <h2 class="mb-4"><i class="fa-solid fa-box"></i> Quản lý đơn hàng</h2>
 
                 <div class="table-list-manage" style="max-height: 80vh;">
                     <table class="table table-bordered table-hover align-middle text-center">

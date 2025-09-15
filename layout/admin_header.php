@@ -17,6 +17,9 @@ $naptien_result = $stmt2->get_result()->fetch_assoc();
 <!-- Sidebar cho desktop -->
 <nav class="col-md-2 d-none d-md-block bg-dark sidebar">
     <div class="p-3 text-white">
+        <h4><i class="fa-solid fa-gauge"></i> Dashboard</h4>
+        <p>Xin chào <b><?= $_SESSION['full_name'] ?></b></p>
+        <hr>
         <?php include("../includes/sidebar_item_admin.php") ?>
     </div>
 </nav>
@@ -24,10 +27,14 @@ $naptien_result = $stmt2->get_result()->fetch_assoc();
 <!-- Sidebar mobile dạng Offcanvas -->
 <div class="offcanvas offcanvas-start bg-dark text-white" tabindex="-1" id="sidebarMobile">
     <div class="offcanvas-header">
-        <h5 class="offcanvas-title">⚙️ Admin</h5>
+        <h4><i class="fa-solid fa-gauge"></i> Dashboard</h4>
+        <p>Xin chào <b><?= $_SESSION['full_name'] ?></b></p>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        <hr>
     </div>
     <div class="offcanvas-body">
-        <?php include("../includes/sidebar_item_admin.php") ?>
+        <div class="d-md-block bg-dark sidebar">
+            <?php include("../includes/sidebar_item_admin.php") ?>
+        </div>
     </div>
 </div>

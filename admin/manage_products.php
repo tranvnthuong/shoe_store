@@ -217,7 +217,7 @@ if (isset($_POST['update'])) {
   $cur = $conn->query("SELECT image FROM products WHERE id=" . $id)->fetch_assoc();
   $first = empty($cur['image']);
 
-    // Ảnh
+  // Ảnh
   $firstImageUrl = null;
   if (isset($_FILES['images']) && is_array($_FILES['images']['tmp_name'])) {
     $first = true;
@@ -284,8 +284,8 @@ $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
   <div class="container-fluid">
     <div class="row">
       <?php include("../layout/admin_header.php") ?>
-      <main class="col-md-10 ms-sm-auto col-lg-10 px-md-4 content">
-
+      <main class="col-12 col-md-10 ms-sm-auto px-md-4 dashboard-content">
+        <h2 class="mb-4"><i class="fa-solid fa-boxes-stacked"></i> Quản lý sản phẩm</h2>
         <!-- Form -->
         <div class="card mb-4">
           <div class="card-header bg-dark text-white">
@@ -311,7 +311,8 @@ $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
                   <select name="category_id" class="form-control" required>
                     <option value="">-- Chọn danh mục --</option>
                     <?php while ($cat = $categories->fetch_assoc()): ?>
-                      <option value="<?= $cat['id'] ?>" <?= isset($edit_product['category_id']) && $edit_product['category_id'] == $cat['id'] ? 'selected' : '' ?>>
+                      <option value="<?= $cat['id'] ?>"
+                        <?= isset($edit_product['category_id']) && $edit_product['category_id'] == $cat['id'] ? 'selected' : '' ?>>
                         <?= htmlspecialchars($cat['name']) ?>
                       </option>
                     <?php endwhile; ?>
@@ -319,29 +320,30 @@ $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
                 </div>
               </div>
 
-           <div class="row mb-2">
-          <div class="col-md-12">
-            <!-- Vùng kéo thả -->
-            <div id="drop-area" class="border rounded p-3 text-center bg-light">
-              <input type="file" id="fileElem" name="images[]" multiple accept="image/*" 
-                    class="d-none" <?= $edit_mode ? '' : 'required' ?>>
-              <label class="btn btn-outline-primary mt-2" for="fileElem">Chọn ảnh</label>
-              <!-- Preview ảnh mới -->
-              <div id="preview" class="mt-3 d-flex flex-wrap gap-2"></div>
-            </div>
+              <div class="row mb-2">
+                <div class="col-md-12">
+                  <!-- Vùng kéo thả -->
+                  <div id="drop-area" class="border rounded p-3 text-center bg-light">
+                    <input type="file" id="fileElem" name="images[]" multiple accept="image/*"
+                      class="d-none" <?= $edit_mode ? '' : 'required' ?>>
+                    <label class="btn btn-outline-primary mt-2" for="fileElem">Chọn ảnh</label>
+                    <!-- Preview ảnh mới -->
+                    <div id="preview" class="mt-3 d-flex flex-wrap gap-2"></div>
+                  </div>
 
-            <!-- Ảnh đã có trong DB -->
-            <div class="mt-2">
-              <?php foreach ($product_images as $img): ?>
-                <div class="d-inline-block position-relative me-1">
-                  <img src="<?= htmlspecialchars($img['url']) ?>" width="70" class="mt-1 border">
-                  <a href="?del_img=<?= $img['id'] ?>&product=<?= $edit_product['id'] ?? '' ?>"
-                    class="btn btn-sm btn-danger position-absolute top-0 end-0 py-0 px-1">x</a>
+                  <!-- Ảnh đã có trong DB -->
+                  <div class="mt-2">
+                    <?php foreach ($product_images as $img): ?>
+                      <div class="d-inline-block position-relative me-1">
+                        <img src="<?= htmlspecialchars($img['url']) ?>" width="70"
+                          class="mt-1 border">
+                        <a href="?del_img=<?= $img['id'] ?>&product=<?= $edit_product['id'] ?? '' ?>"
+                          class="btn btn-sm btn-danger position-absolute top-0 end-0 py-0 px-1">x</a>
+                      </div>
+                    <?php endforeach; ?>
+                  </div>
                 </div>
-              <?php endforeach; ?>
-            </div>
-          </div>
-        </div>
+              </div>
 
 
               <textarea name="description" class="form-control mb-2"
@@ -368,13 +370,17 @@ $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
                   <?php endforeach; ?>
                 <?php else: ?>
                   <div class="row mb-2">
-                    <div class="col"><input type="text" name="variants[0][name]" placeholder="Tên biến thể" class="form-control"></div>
-                    <div class="col"><input type="number" step="0.01" name="variants[0][price]" placeholder="Giá" class="form-control"></div>
-                    <div class="col"><input type="number" name="variants[0][stock]" placeholder="Số lượng" class="form-control"></div>
+                    <div class="col"><input type="text" name="variants[0][name]"
+                        placeholder="Tên biến thể" class="form-control"></div>
+                    <div class="col"><input type="number" step="0.01" name="variants[0][price]"
+                        placeholder="Giá" class="form-control"></div>
+                    <div class="col"><input type="number" name="variants[0][stock]"
+                        placeholder="Số lượng" class="form-control"></div>
                   </div>
                 <?php endif; ?>
               </div>
-              <button type="button" class="btn btn-sm btn-secondary mb-3" onclick="addVariant()">+ Thêm biến thể</button>
+              <button type="button" class="btn btn-sm btn-secondary mb-3" onclick="addVariant()">+ Thêm
+                biến thể</button>
 
               <?php if ($edit_mode): ?>
                 <button type="submit" name="update" class="btn btn-primary">Cập nhật</button>
@@ -427,7 +433,7 @@ $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
       </main>
     </div>
   </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     let variantIndex = <?= $edit_mode ? count($product_variants) : 1 ?>;
 
