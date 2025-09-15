@@ -14,92 +14,6 @@ if (empty($_SESSION['csrf_token'])) {
 $csrf_token = $_SESSION['csrf_token'];
 
 $user_id = $_SESSION['user_id'];
-// Xóa sản phẩm khỏi giỏ
-if (isset($_GET['remove'])) {
-  $id = intval($_GET['remove']);
-  $stmt = $conn->prepare("DELETE FROM cart WHERE user_id=? AND id=?");
-  $stmt->bind_param("ii", $user_id, $id);
-  $stmt->execute();
-  header("Location: cart.php");
-  exit;
-}
-
-function addToCart($product_id, $variant_id = null, $qty = 1)
-{
-  global $conn, $user_id;
-
-  // Nếu có variant → kiểm tra tồn kho theo variant
-  if ($variant_id) {
-    $stmt = $conn->prepare("SELECT stock FROM product_variants WHERE id=? AND product_id=?");
-    $stmt->bind_param("ii", $variant_id, $product_id);
-  } else {
-    $stmt = $conn->prepare("SELECT stock FROM products WHERE id=?");
-    $stmt->bind_param("i", $product_id);
-  }
-  $stmt->execute();
-  $stockRow = $stmt->get_result()->fetch_assoc();
-  $stock = $stockRow['stock'] ?? 0;
-
-  if ($stock <= 0) {
-    return false; // hết hàng
-  }
-
-  // Kiểm tra cart
-  $stmt = $conn->prepare("SELECT * FROM cart WHERE user_id=? AND product_id=? AND (variant_id <=> ?)");
-  $stmt->bind_param("iii", $user_id, $product_id, $variant_id);
-  $stmt->execute();
-  $row = $stmt->get_result()->fetch_assoc();
-
-  if ($row) {
-    $new_qty = min($row['quantity'] + $qty, $stock);
-    $stmt = $conn->prepare("UPDATE cart SET quantity=? WHERE id=?");
-    $stmt->bind_param("ii", $new_qty, $row['id']);
-    $stmt->execute();
-  } else {
-    $qty = min($qty, $stock);
-    $stmt = $conn->prepare("INSERT INTO cart(user_id, product_id, variant_id, quantity) VALUES(?,?,?,?)");
-    $stmt->bind_param("iiii", $user_id, $product_id, $variant_id, $qty);
-    $stmt->execute();
-  }
-  return true;
-}
-
-
-// Thêm sản phẩm vào giỏ
-if (!empty($_GET['add_to_cart']) || isset($_GET['add'])) {
-  $product_id = intval($_GET['add']);
-  $variant_id = !empty($_GET['variant']) ? intval($_GET['variant']) : null;
-  $qty = !empty($_GET['qty']) ? intval($_GET['qty']) : 1;
-
-  if (addToCart($product_id, $variant_id, $qty)) {
-    header("Location: cart.php");
-  } else {
-    $_SESSION['error'] = "❌ Hết hàng!";
-    header("Location: products.php");
-  }
-  exit;
-}
-
-
-// Cập nhật số lượng
-if (isset($_POST['update'])) {
-  foreach ($_POST['qty'] as $cart_id => $qty) {
-    $qty = intval($qty);
-    if ($qty <= 0) {
-      $stmt = $conn->prepare("DELETE FROM cart WHERE user_id=? AND id=?");
-      $stmt->bind_param("ii", $user_id, $cart_id);
-      $stmt->execute();
-    } else {
-      $stmt = $conn->prepare("UPDATE cart SET quantity=? WHERE user_id=? AND id=?");
-      $stmt->bind_param("iii", $qty, $user_id, $cart_id);
-      $stmt->execute();
-    }
-  }
-  header("Location: cart.php");
-  exit;
-}
-
-
 // Lấy danh sách giỏ hàng
 $stmt = $conn->prepare("
   SELECT c.id as cart_id, c.quantity, 
@@ -129,21 +43,6 @@ while ($row = $result->fetch_assoc()) {
 $discount = 0;
 $coupon_code = "";
 
-// Áp dụng coupon
-if (isset($_POST['apply_coupon'])) {
-  $coupon_code = strtoupper(trim($_POST['coupon']));
-  $stmt = $conn->prepare("SELECT * FROM coupons WHERE code=? LIMIT 1");
-  $stmt->bind_param("s", $coupon_code);
-  $stmt->execute();
-  $coupon = $stmt->get_result()->fetch_assoc();
-  if ($coupon) {
-    $_SESSION['coupon'] = $coupon;
-  } else {
-    unset($_SESSION['coupon']);
-    $msg = "<div class='alert alert-danger mt-3'>❌ Mã giảm giá không hợp lệ</div>";
-  }
-}
-
 // Nếu đã có coupon thì tính giảm
 if (isset($_SESSION['coupon'])) {
   $coupon = $_SESSION['coupon'];
@@ -166,11 +65,6 @@ if (isset($_SESSION['coupon'])) {
   }
 }
 
-// CSRF token
-if (empty($_SESSION['csrf_token'])) {
-  $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-$csrf_token = $_SESSION['csrf_token'];
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -198,72 +92,74 @@ $csrf_token = $_SESSION['csrf_token'];
       <div class="alert alert-info">Giỏ hàng trống. <a href="products.php">Mua sắm ngay</a></div>
     <?php else: ?>
       <form id="cartForm" method="POST">
-        <inpit type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
-          <table class="table table-bordered text-center">
-            <thead class="table-dark">
+        <input type="hidden" id="csrfToken" name="csrf_token" value="<?= $csrf_token ?>">
+        <input type="hidden" name="action" value="update">
+        <table class="table table-bordered text-center">
+          <thead class="table-dark">
+            <tr>
+              <th>Ảnh</th>
+              <th>Tên sản phẩm</th>
+              <th>Giá</th>
+              <th>Số lượng</th>
+              <th>Thành tiền</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cartTableBody">
+            <?php foreach ($items as $p): ?>
               <tr>
-                <th>Ảnh</th>
-                <th>Tên sản phẩm</th>
-                <th>Giá</th>
-                <th>Số lượng</th>
-                <th>Thành tiền</th>
-                <th></th>
+                <td><img src="<?= $p['image'] ?>" width="80"></td>
+                <td><?= htmlspecialchars($p['name']) ?>
+                  <?php if ($p['variant_name']) echo " [" . htmlspecialchars($p['variant_name']) . "]"; ?>
+                </td>
+                <td><?= number_format($p['price'], 0, ',', '.') ?> VND</td>
+                <td>
+                  <input type="number" name="qty[<?= $p['cart_id'] ?>]" value="<?= $p['quantity'] ?>" min="1"
+                    max="<?= $p['product_stock'] ?>" class="form-control w-50 mx-auto input-qty">
+                </td>
+                <td><?= number_format($p['subtotal'], 0, ',', '.') ?> VND</td>
+                <td>
+                  <button type="button" class="btn btn-sm btn-danger remove-cart"
+                    data-id="<?= $p['cart_id'] ?>">Xóa</button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              <?php foreach ($items as $p): ?>
-                <tr>
-                  <td><img src="<?= $p['image'] ?>" width="80"></td>
-                  <td><?= htmlspecialchars($p['name']) ?>
-                    <?php if ($p['variant_name']) echo " [" . htmlspecialchars($p['variant_name']) . "]"; ?>
-                  </td>
-                  <td><?= number_format($p['price'], 0, ',', '.') ?> VND</td>
-                  <td>
-                    <input type="number" name="qty[<?= $p['cart_id'] ?>]" value="<?= $p['quantity'] ?>"
-                      min="1" max="<?= $p['product_stock'] ?>"
-                      class="form-control w-50 mx-auto input-qty">
-                  </td>
-                  <td><?= number_format($p['subtotal'], 0, ',', '.') ?> VND</td>
-                  <td><a href="cart.php?remove=<?= $p['cart_id'] ?>" class="btn btn-sm btn-danger">Xóa</a>
-                  </td>
-                </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
-          <!-- Coupon -->
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <input type="text" name="coupon" class="form-control" placeholder="Nhập mã giảm giá"
-                value="<?= $coupon_code ?>">
-            </div>
-            <div class="col-md-2">
-              <button type="submit" name="apply_coupon" class="btn btn-warning w-100">Áp dụng</button>
-            </div>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+        <!-- Coupon -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <input type="text" id="couponCode" class="form-control" placeholder="Nhập mã giảm giá"
+              value="<?= $coupon_code ?>">
           </div>
-          <?= $msg ?? "" ?>
-
-          <!-- Tổng tiền -->
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h5>Tạm tính: <span id="total"><?= number_format($total, 0, ',', '.') ?> VND</span></h5>
-              <?php if ($discount > 0): ?>
-                <h5>
-                  Giảm giá: -<span id="discount"><?= number_format($discount, 0, ',', '.') ?> VND</span>
-                  (<?= $coupon_code ?>)
-                </h5>
-              <?php endif; ?>
-              <h4>
-                Tổng thanh toán: <span id="final_total"
-                  class="text-danger"><?= number_format($total - $discount, 0, ',', '.') ?>
-                  VND</span>
-              </h4>
-            </div>
-
-            <div class="text-end">
-              <button type="submit" name="update" class="btn btn-primary">Cập nhật</button>
-              <a href="checkout.php" class="btn btn-success">Thanh toán</a>
-            </div>
+          <div class="col-md-2">
+            <button type="button" id="applyCoupon" class="btn btn-warning w-100">
+              <span><i class="fa-solid fa-ticket"></i></span>
+              Áp dụng
+            </button>
           </div>
+        </div>
+        <?= $msg ?? "" ?>
+
+        <!-- Tổng tiền -->
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h5>Tạm tính: <span id="total"><?= number_format($total, 0, ',', '.') ?> VND</span></h5>
+            <h5 id="discountText" <?php if ($discount <= 0) echo 'class="d-none"' ?>>
+              Giảm giá: <span class="text-primary">-<?= number_format($discount, 0, ',', '.') ?> VND</span>
+              (<?= $coupon_code ?>)
+            </h5>
+            <h4>
+              Tổng thanh toán: <span id="final_total"
+                class="text-danger"><?= number_format($total - $discount, 0, ',', '.') ?>
+                VND</span>
+            </h4>
+          </div>
+
+          <div class="text-end">
+            <a href="checkout.php" class="btn btn-success">Thanh toán</a>
+          </div>
+        </div>
       </form>
     <?php endif; ?>
   </div>
@@ -274,12 +170,78 @@ $csrf_token = $_SESSION['csrf_token'];
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="../assets/js/script.js"></script>
   <script>
+    function formatVND(n) {
+      return n.toLocaleString("vi-VN", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }) + " VND";
+    }
+
+
+    function debounce(func, delay = 500) {
+      let timeoutId; // This will store the ID of the timeout
+
+      return function(...args) { // Returns a new function that acts as the debounced version
+        const context = this; // Preserve the 'this' context
+
+        clearTimeout(timeoutId); // Clear any existing timeout
+
+        timeoutId = setTimeout(() => { // Set a new timeout
+          func.apply(context, args); // Execute the original function with its context and arguments
+        }, delay);
+      };
+    }
     $(document).ready(function() {
-      const btnLoader = makeButtonLoader($("#cartTitle"));
+
+      const calculateTotal = (data) => {
+        if (data.cartCount !== undefined) {
+          $("#cartCount").text(data.cartCount);
+        }
+
+        // ✅ cập nhật tổng tiền nếu API trả về
+        if (data.total) {
+          $("#total").text(formatVND(data.total));
+          $("#final_total").text(formatVND(data.total - (data
+            .discount ?? 0)));
+        }
+
+        if (data.discount && data.discount > 0) {
+          $("#discountText").html(`
+                    Giảm giá: <span class="text-primary">-${formatVND(data.discount)}</span> (${data.coupon_code})
+                `);
+        } else {
+          $("#discountText").addClass("d-none");
+        }
+      };
+
+      const renderCartItem = (data) => {
+        if (data.items.length > 0) {
+          let tbody = "";
+          data.items.forEach(p => {
+            tbody += `
+                <tr>
+                  <td><img src="${p.image}" width="80"></td>
+                  <td>${p.name}${p.variant_name ? " ["+p.variant_name+"]" : ""}</td>
+                  <td>${formatVND(p.price)}</td>
+                  <td>
+                    <input type="number" name="qty[${p.cart_id}]" value="${p.quantity}"
+                      min="1" max="${p.product_stock}" 
+                      class="form-control w-50 mx-auto input-qty">
+                  </td>
+                  <td>${formatVND(p.subtotal)}</td>
+                  <td><button type="button" class="btn btn-sm btn-danger remove-cart" data-id="${p.cart_id}">Xóa</button></td>
+                </tr>`;
+          });
+          $("#cartTableBody").html(tbody);
+        } else {
+          $("#cartForm")[0].outerHTML =
+            '<div class="alert alert-info">Giỏ hàng trống. <a href="products.php">Mua sắm ngay</a></div>';
+        }
+      };
 
       $("#cartForm").on("submit", function(e) {
         e.preventDefault();
-
+        const btnLoader = makeButtonLoader($("#cartTitle"));
         $.ajax({
           url: "../api/cart_api.php",
           type: "POST",
@@ -292,7 +254,12 @@ $csrf_token = $_SESSION['csrf_token'];
             btnLoader.showDefault();
           },
           success: (data) => {
-            showMessage(data);
+            if (data.status === "success") {
+              calculateTotal(data);
+              // ✅ cập nhật lại bảng giỏ hàng nếu có mảng items
+              renderCartItem(data);
+
+            }
           },
           error: (xhr, status, error) => {
             Swal.fire({
@@ -304,6 +271,83 @@ $csrf_token = $_SESSION['csrf_token'];
           }
         });
       });
+
+      $(document).on("change", ".input-qty", debounce(function() {
+        let $input = $(this);
+        let max = parseInt($input.attr("max"));
+        let val = parseInt($input.val());
+
+        if (val > max) {
+          $input.val(max);
+        }
+
+        $("#cartForm").trigger("submit"); // vẫn gọi AJAX
+      }, 500));
+
+      $("#applyCoupon").on("click", function() {
+        const btnLoader = makeButtonLoader($(this));
+        $.ajax({
+          url: "../api/cart_api.php",
+          type: "POST",
+          data: {
+            action: "apply_coupon",
+            coupon_code: $("#couponCode").val(),
+            csrf_token: $("#csrfToken").val()
+          },
+          dataType: "json",
+          beforeSend: () => {
+            btnLoader.showLoading();
+          },
+          complete: () => {
+            btnLoader.showDefault();
+          },
+          success: (data) => {
+            showMessage(data);
+            calculateTotal(data);
+          },
+          error: (xhr, status, error) => {
+            Swal.fire({
+              icon: "error",
+              title: "Lỗi server",
+              text: "Không thể gửi yêu cầu. Vui lòng thử lại!",
+            });
+            console.error(error);
+          }
+        });
+      });
+
+      $(document).on("click", ".remove-cart", function() {
+        const btnLoader = makeButtonLoader($(this));
+        $.ajax({
+          url: "../api/cart_api.php",
+          type: "POST",
+          data: {
+            action: "remove",
+            cart_id: $(this).data("id"),
+            csrf_token: $("#csrfToken").val()
+          },
+          dataType: "json",
+          beforeSend: () => {
+            btnLoader.showLoading();
+          },
+          complete: () => {
+            btnLoader.showDefault();
+          },
+          success: (data) => {
+            calculateTotal(data);
+            renderCartItem(data);
+          },
+          error: (xhr, status, error) => {
+            Swal.fire({
+              icon: "error",
+              title: "Lỗi server",
+              text: "Không thể gửi yêu cầu. Vuiど thử lagi!",
+            });
+            console.error(error);
+          }
+        });
+      });
+
     });
   </script>
 </body>

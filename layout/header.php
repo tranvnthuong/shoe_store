@@ -199,12 +199,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <a href="<?= $base_url ?>/pages/cart.php" class="text-light position-relative me-3 fs-5"
                     title="Giỏ hàng">
                     <i class="fas fa-shopping-cart"></i>
-                    <?php if ($cart_count > 0): ?>
-                        <span id="cartCount"
-                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            <?= $cart_count ?>
-                        </span>
-                    <?php endif; ?>
+                    <span id="cartCount"
+                        class="<?php if ($cart_count <= 0) echo 'd-none'; ?> position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        <?= $cart_count ?>
+                    </span>
                 </a>
             </div>
 

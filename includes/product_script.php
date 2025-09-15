@@ -24,6 +24,7 @@
                 success: (data) => {
                     showMessage(data);
                     if (data.status === "success") {
+                        $('#cartCount').removeClass('d-none');
                         $('#cartCount').text(data.cartCount);
                     }
                 },

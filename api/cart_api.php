@@ -95,10 +95,12 @@ if ($action == "add") {
 
 $total = 0;
 $items = [];
+$discount = 0;
+$coupon_code = "";
 
 function updateCart()
 {
-    global $conn, $user_id, $total, $items;
+    global $conn, $user_id, $total, $items, $discount, $coupon_code;
     $stmt = $conn->prepare("
   SELECT c.id as cart_id, c.quantity, 
          p.id as product_id, p.name, p.image, p.price as base_price, p.stock as product_stock,
@@ -118,62 +120,117 @@ function updateCart()
         $total += $row['subtotal'];
         $items[] = $row;
     }
+    // Nếu đã có coupon thì tính giảm
+    if (isset($_SESSION['coupon'])) {
+        $coupon = $_SESSION['coupon'];
+
+        if (!empty($coupon['expiry'])) {
+            $expiry = strtotime($coupon['expiry']);
+            if ($expiry < time()) {
+                unset($_SESSION['coupon']);
+                echo json_encode([
+                    "status" => "error",
+                    "msg" => "Mã giảm giá này đã hết hạn",
+                    "isToast" => true
+                ]);
+                exit;
+            }
+        }
+
+        if (isset($_SESSION['coupon'])) { // nếu vẫn còn hợp lệ
+            if ($coupon['type'] === 'percent') {
+                $discount = ($total * $coupon['discount']) / 100;
+            } else {
+                $discount = $coupon['discount'];
+            }
+            $coupon_code = $coupon['code'];
+        }
+    }
 }
 
 updateCart();
-// Giảm giá
-$discount = 0;
-$coupon_code = "";
 
 // Áp dụng coupon
-if (isset($_POST['apply_coupon'])) {
-    $coupon_code = strtoupper(trim($_POST['coupon']));
+if ($action == 'apply_coupon') {
+    $coupon_code = trim($_POST['coupon_code']);
+    if (empty($coupon_code)) {
+        echo json_encode([
+            "status" => "error",
+            "msg" => "Vui lòng nhập mã giảm giá",
+            "isToast" => true
+        ]);
+        exit;
+    }
+    $coupon_code = strtoupper($coupon_code);
     $stmt = $conn->prepare("SELECT * FROM coupons WHERE code=? LIMIT 1");
     $stmt->bind_param("s", $coupon_code);
     $stmt->execute();
     $coupon = $stmt->get_result()->fetch_assoc();
     if ($coupon) {
         $_SESSION['coupon'] = $coupon;
+        if (!empty($coupon['expiry'])) {
+            $expiry = strtotime($coupon['expiry']);
+            if ($expiry < time()) {
+                unset($_SESSION['coupon']);
+                echo json_encode([
+                    "status" => "error",
+                    "msg" => "Mã giảm giá này đã hết hạn",
+                    "isToast" => true
+                ]);
+                exit;
+            }
+        }
+
+        if (isset($_SESSION['coupon'])) { // nếu vẫn còn hợp lệ
+            if ($coupon['type'] === 'percent') {
+                $discount = ($total * $coupon['discount']) / 100;
+            } else {
+                $discount = $coupon['discount'];
+            }
+            $coupon_code = $coupon['code'];
+            echo json_encode([
+                "status" => "success",
+                "msg" => "Nhập thành công mã giảm giá $coupon_code",
+                "total" => $total,
+                "discount" => $discount,
+                "coupon_code" => $coupon_code
+            ]);
+            exit;
+        }
     } else {
         unset($_SESSION['coupon']);
-        $msg = "<div class='alert alert-danger mt-3'>❌ Mã giảm giá không hợp lệ</div>";
-    }
-}
-
-// Nếu đã có coupon thì tính giảm
-if (isset($_SESSION['coupon'])) {
-    $coupon = $_SESSION['coupon'];
-
-    if (!empty($coupon['expiry'])) {
-        $expiry = strtotime($coupon['expiry']);
-        if ($expiry < time()) {
-            unset($_SESSION['coupon']);
-            $msg = "<div class='alert alert-danger mt-3'>❌ Mã giảm giá đã hết hạn</div>";
-        }
-    }
-
-    if (isset($_SESSION['coupon'])) { // nếu vẫn còn hợp lệ
-        if ($coupon['type'] === 'percent') {
-            $discount = ($total * $coupon['discount']) / 100;
-        } else {
-            $discount = $coupon['discount'];
-        }
-        $coupon_code = $coupon['code'];
+        echo json_encode([
+            "status" => "error",
+            "msg" => "Mã giảm giá không hợp lệ",
+            "isToast" => true
+        ]);
+        exit;
     }
 }
 
 // Xóa sản phẩm khỏi giỏ
-if (isset($_GET['remove'])) {
-    $id = intval($_GET['remove']);
+if ($action == 'remove') {
+    $id = intval($_POST['cart_id']);
     $stmt = $conn->prepare("DELETE FROM cart WHERE user_id=? AND id=?");
     $stmt->bind_param("ii", $user_id, $id);
     $stmt->execute();
-    header("Location: cart.php");
+    $items = [];
+    $total = 0;
+    $discount = 0;
+    updateCart();
+    echo json_encode([
+        "status" => "success",
+        "msg" => "Cập nhật thành công",
+        "items" => $items,
+        "total" => $total,
+        "discount" => $discount,
+        "coupon_code" => $coupon_code
+    ]);
     exit;
 }
 
 // Cập nhật số lượng
-if (isset($_POST['update'])) {
+if ($action == "update") {
     foreach ($_POST['qty'] as $cart_id => $qty) {
         $qty = intval($qty);
         if ($qty <= 0) {
@@ -186,13 +243,17 @@ if (isset($_POST['update'])) {
             $stmt->execute();
         }
     }
+    $items = [];
+    $total = 0;
+    $discount = 0;
+    updateCart();
     echo json_encode([
         "status" => "success",
         "msg" => "Cập nhật thành công",
-        "cartCount" => $row['cart_count'],
         "items" => $items,      // danh sách sản phẩm
         "total" => $total,
-        "discount" => $discount
+        "discount" => $discount,
+        "coupon_code" => $coupon_code
     ]);
     exit;
 }
