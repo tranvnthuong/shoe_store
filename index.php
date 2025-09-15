@@ -215,7 +215,7 @@ $csrf_token = $_SESSION['csrf_token'];
                         showMessage(data);
                         if (data.status === "success") {
                             $('#cartCount').removeClass('d-none');
-                            $('#cartCount').text(data.cartCount);
+                            $('#cartCount').text(data.cart_count);
                         }
                     },
                     error: (xhr, status, error) => {

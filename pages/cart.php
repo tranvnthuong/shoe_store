@@ -194,8 +194,11 @@ if (isset($_SESSION['coupon'])) {
     $(document).ready(function() {
 
       const calculateTotal = (data) => {
-        if (data.cartCount !== undefined) {
-          $("#cartCount").text(data.cartCount);
+        if (data.cart_count !== undefined) {
+          $('#cartCount').text(data.cart_count);
+          if (data.cart_count <= 0) {
+            $('#cartCount').addClass('d-none');
+          }
         }
 
         // ✅ cập nhật tổng tiền nếu API trả về

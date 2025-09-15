@@ -66,6 +66,16 @@ function addToCart($product_id, $variant_id = null, $qty = 1)
     return true;
 }
 
+function getCartCount()
+{
+    global $conn, $user_id;
+    $stmt = $conn->prepare("SELECT sum(quantity) as cart_count FROM cart WHERE user_id=?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    return $row['cart_count'] ?? 0;
+}
+
 // Thêm sản phẩm vào giỏ hàng
 if ($action == "add") {
     $product_id = intval($_POST['id']);
@@ -73,14 +83,11 @@ if ($action == "add") {
     $qty = !empty($_POST['qty']) ? intval($_POST['qty']) : 1;
 
     if (addToCart($product_id, $variant_id, $qty)) {
-        $stmt = $conn->prepare("SELECT sum(quantity) as cart_count FROM cart WHERE user_id=?");
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
+        $cartCount = getCartCount();
         echo json_encode([
             "status" => "success",
             "msg" => "Đã thêm vào rỏ hàng",
-            "cartCount" => $row['cart_count'],
+            "cart_count" => $cartCount,
             "isToast" => true
         ]);
     } else {
@@ -188,12 +195,14 @@ if ($action == 'apply_coupon') {
                 $discount = $coupon['discount'];
             }
             $coupon_code = $coupon['code'];
+            $cartCount = getCartCount();
             echo json_encode([
                 "status" => "success",
                 "msg" => "Nhập thành công mã giảm giá $coupon_code",
                 "total" => $total,
                 "discount" => $discount,
-                "coupon_code" => $coupon_code
+                "coupon_code" => $coupon_code,
+                "cart_count" => $cartCount
             ]);
             exit;
         }
