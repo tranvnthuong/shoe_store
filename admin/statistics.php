@@ -147,14 +147,13 @@ $order_week = $stmt->get_result()->fetch_assoc();
           </div>
         </section>
 
-        <!-- Biểu đồ doanh thu -->
         <div class="mt-5">
-          <h4>📈 Biểu đồ doanh thu theo tháng</h4>
+          <h4>📈 Doanh thu trong tháng</h4>
           <canvas id="revenueChart" height="100"></canvas>
         </div>
 
         <div class="mt-5">
-          <h4>📆 Biểu đồ doanh thu tuần</h4>
+          <h4>📆 Doanh thu trong tuần</h4>
           <canvas id="dailyRevenueChart" height="100"></canvas>
         </div>
 
