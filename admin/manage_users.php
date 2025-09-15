@@ -205,7 +205,7 @@ $result = $conn->query("SELECT * FROM users ORDER BY created_at DESC");
                                 <tr>
                                     <td><?= htmlspecialchars($row['full_name']) ?></td>
                                     <td><?= htmlspecialchars($row['email']) ?></td>
-                                    <td><?= htmlspecialchars($row['balance']) ?></td>
+                                    <td><?= number_format($row['balance'], 0, ',', '.') . ' VND' ?></td>
                                     <td><?= $row['day_of_birth'] ?></td>
                                     <td><?= htmlspecialchars($row['address']) ?></td>
                                     <td><?= htmlspecialchars($row['phone']) ?></td>

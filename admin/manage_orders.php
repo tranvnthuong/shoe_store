@@ -74,42 +74,36 @@ $result = $conn->query($sql);
                         <tbody>
                             <?php while ($row = $result->fetch_assoc()): ?>
                                 <tr>
-                                    <?php
-                                    $order_id = $row['id'];
-                                    $sql_items = "SELECT SUM(price * quantity) AS total FROM order_items WHERE order_id = $order_id";
-                                    $total_res = $conn->query($sql_items);
-                                    $total_row = $total_res->fetch_assoc();
-                                    $total = $total_row['total'] ?? 0;
-                                    ?>
+
                                     <td><?= $row['id'] ?></td>
                                     <td><?= htmlspecialchars($row['full_name']) ?></td>
                                     <td><?= htmlspecialchars($row['email']) ?></td>
-                                    <td><?= number_format($total, 0, ',', '.') ?> VND</td>
+                                    <td><?= number_format($row['total_price'], 0, ',', '.') ?> VND</td>
                                     <td>
                                         <form method="POST" class="d-flex justify-content-center align-items-center">
                                             <input type="hidden" name="order_id" value="<?= $row['id'] ?>">
                                             <select name="status" class="form-select form-select-sm me-2">
                                                 <option value="pending"
-                                                    <?= $row['status'] == 'pending' ? 'selected' : '' ?>>⏳
+                                                    <?= $row['status'] == 'pending' ? 'selected' : '' ?>>
                                                     Chờ xử lý
                                                 </option>
                                                 <option value="processing"
-                                                    <?= $row['status'] == 'processing' ? 'selected' : '' ?>>🔄
+                                                    <?= $row['status'] == 'processing' ? 'selected' : '' ?>>
                                                     Đang xử lý</option>
                                                 <option value="shipping"
-                                                    <?= $row['status'] == 'shipping' ? 'selected' : '' ?>>🚚
+                                                    <?= $row['status'] == 'shipping' ? 'selected' : '' ?>>
                                                     Đang giao</option>
                                                 <option value="completed"
-                                                    <?= $row['status'] == 'completed' ? 'selected' : '' ?>>✅
+                                                    <?= $row['status'] == 'completed' ? 'selected' : '' ?>>
                                                     Đã giao
                                                 </option>
+                                                <option value="cancelled"
+                                                    <?= $row['status'] == 'cancelled' ? 'selected' : '' ?>>
+                                                    Đã hủy</option>
                                                 <option value="returned"
-                                                    <?= $row['status'] == 'returned' ? 'selected' : '' ?>>🔁
+                                                    <?= $row['status'] == 'returned' ? 'selected' : '' ?>>
                                                     Trả hàng
                                                 </option>
-                                                <option value="cancelled"
-                                                    <?= $row['status'] == 'cancelled' ? 'selected' : '' ?>>❌ Đã
-                                                    hủy</option>
                                             </select>
                                             <button type="submit" name="update_status" class="btn btn-sm btn-primary">Cập
                                                 nhật</button>

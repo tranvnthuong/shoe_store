@@ -139,6 +139,7 @@ if (isset($_POST['checkout'])) {
         $stmtBal->bind_param("di", $final_total, $user_id);
         $stmtBal->execute();
         $stmtBal->close();
+        $_SESSION['balance'] = floatval($balance - $final_total);
       }
 
       if (isset($_SESSION['coupon'])) {

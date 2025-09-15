@@ -60,8 +60,14 @@ $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 <body>
     <div class="container my-5">
-        <h2 class="mb-4">Chi tiết đơn hàng #<?= $order['id'] ?></h2>
-
+        <div class="d-flex justify-content-between">
+            <h2 class="mb-4">Chi tiết đơn hàng #<?= $order['id'] ?></h2>
+            <div>
+                <a href="manage_orders.php" class="btn btn-outline-secondary">
+                    <i class="fa fa-arrow-left"></i> Quản lý đơn hàng
+                </a>
+            </div>
+        </div>
         <?php if (isset($msg)) echo $msg; ?>
 
         <div class="row mb-4">
@@ -78,21 +84,22 @@ $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                 <form method="POST">
                     <label class="form-label"><b>Trạng thái:</b></label>
                     <select name="status" class="form-select w-50 d-inline-block">
-                        <option value="pending" <?= $order['status'] == 'pending' ? 'selected' : '' ?>>⏳
+                        <option value="pending" <?= $order['status'] == 'pending' ? 'selected' : '' ?>>
                             Chờ xử lý
                         </option>
-                        <option value="processing" <?= $order['status'] == 'processing' ? 'selected' : '' ?>>🔄
+                        <option value="processing" <?= $order['status'] == 'processing' ? 'selected' : '' ?>>
                             Đang xử lý</option>
-                        <option value="shipping" <?= $order['status'] == 'shipping' ? 'selected' : '' ?>>🚚
+                        <option value="shipping" <?= $order['status'] == 'shipping' ? 'selected' : '' ?>>
                             Đang giao</option>
-                        <option value="completed" <?= $order['status'] == 'completed' ? 'selected' : '' ?>>✅
+                        <option value="completed" <?= $order['status'] == 'completed' ? 'selected' : '' ?>>
                             Đã giao
                         </option>
-                        <option value="returned" <?= $order['status'] == 'returned' ? 'selected' : '' ?>>🔁
+                        <option value="cancelled" <?= $order['status'] == 'cancelled' ? 'selected' : '' ?>>
+                            Đã hủy
+                        </option>
+                        <option value="returned" <?= $order['status'] == 'returned' ? 'selected' : '' ?>>
                             Trả hàng
                         </option>
-                        <option value="cancelled" <?= $order['status'] == 'cancelled' ? 'selected' : '' ?>>❌ Đã
-                            hủy</option>
                     </select>
                     <button type="submit" name="update_status" class="btn btn-primary">Cập nhật</button>
                 </form>
@@ -128,8 +135,6 @@ $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             <h4>Thành tiền: <span class="text-danger"><?= number_format($order['total_price'], 0, ',', '.') ?>
                     VND</span></h4>
         </div>
-
-        <a href="manage_orders.php" class="btn btn-secondary mt-3">⬅ Quay lại danh sách đơn</a>
     </div>
 </body>
 

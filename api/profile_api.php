@@ -35,7 +35,7 @@ if ($action == "update_profile") {
         exit;
     }
     $full_name    = trim($_POST['full_name']);
-    $day_of_birth = $_POST['day_of_birth'] ?? null;
+    $day_of_birth = !empty($_POST['day_of_birth']) ? $_POST['day_of_birth'] : NULL;
     $phone        = trim($_POST['phone']);
     $address      = trim($_POST['address']);
 

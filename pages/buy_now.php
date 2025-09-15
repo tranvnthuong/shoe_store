@@ -142,6 +142,7 @@ if (isset($_POST['checkout'])) {
                 $stmtBal = $conn->prepare("UPDATE users SET balance = balance - ? WHERE id=?");
                 $stmtBal->bind_param("di", $final_total, $user_id);
                 $stmtBal->execute();
+                $_SESSION['balance'] = floatval($balance - $final_total);
             }
 
             $conn->commit();

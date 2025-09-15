@@ -5,7 +5,7 @@ session_start();
 header('Content-Type: application/json');
 
 $full_name    = trim($_POST['full_name']);
-$day_of_birth = $_POST['day_of_birth'];
+$day_of_birth = !empty($_POST['day_of_birth']) ? $_POST['day_of_birth'] : NULL;
 $email        = trim($_POST['email']);
 $password     = trim($_POST['password']);
 $confirm      = trim($_POST['confirm']);

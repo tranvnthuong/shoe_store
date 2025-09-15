@@ -36,11 +36,6 @@ $base_url = "/shoe_store";
                     <a href="#" class="text-light fs-4"><i class="fa-brands fa-youtube"></i></a>
                     <a href="#" class="text-light fs-4"><i class="fa-brands fa-twitter"></i></a>
                 </div>
-                <form class="d-flex justify-content-center">
-                    <input type="email" class="form-control form-control-sm me-2 px-4 py-2" style="flex-basis: 80%;"
-                        placeholder="Nhập email của bạn...">
-                    <button class="btn btn-danger btn-sm">Đăng ký</button>
-                </form>
             </div>
         </div>
         <hr class="border-light">

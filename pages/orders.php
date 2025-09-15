@@ -111,18 +111,18 @@ $result = $stmt->get_result();
         <div class="col-md-4">
           <select name="status" class="form-select" onchange="this.form.submit()">
             <option value="">-- Tất cả trạng thái --</option>
-            <option value="pending" <?= $status_filter == "pending" ? "selected" : "" ?>>⏳ Chờ xác nhận
+            <option value="pending" <?= $status_filter == "pending" ? "selected" : "" ?>>Chờ xác nhận
             </option>
-            <option value="processing" <?= $status_filter == "processing" ? "selected" : "" ?>>📦 Chờ lấy
-              hàng
+            <option value="processing" <?= $status_filter == "processing" ? "selected" : "" ?>>Đang xử lý
             </option>
-            <option value="shipping" <?= $status_filter == "shipping" ? "selected" : "" ?>>🚚 Đang giao
+            <option value="shipping" <?= $status_filter == "shipping" ? "selected" : "" ?>>Đang giao
             </option>
-            <option value="completed" <?= $status_filter == "completed" ? "selected" : "" ?>>✅ Đã giao
+            <option value="completed" <?= $status_filter == "completed" ? "selected" : "" ?>>Đã giao
             </option>
-            <option value="returned" <?= $status_filter == "returned" ? "selected" : "" ?>>↩️ Trả hàng
+            <option value="canceled" <?= $status_filter == "canceled" ? "selected" : "" ?>>Đã hủy
             </option>
-            <option value="canceled" <?= $status_filter == "canceled" ? "selected" : "" ?>>❌ Đã hủy</option>
+            <option value="returned" <?= $status_filter == "returned" ? "selected" : "" ?>>Trả hàng
+            </option>
           </select>
         </div>
       </div>
@@ -146,35 +146,20 @@ $result = $stmt->get_result();
 
         // Format ngày
         $order_date = date("d/m/Y H:i", strtotime($row['created_at']));
-
-        // Hiển thị trạng thái
-        switch ($row['status']) {
-          case 'pending':
-            $status = '<span class="status-badge bg-warning text-dark">⏳ Chờ xác nhận</span>';
-            break;
-          case 'processing':
-            $status = '<span class="status-badge bg-info text-white">📦 Chờ lấy hàng</span>';
-            break;
-          case 'shipping':
-            $status = '<span class="status-badge bg-primary text-white">🚚 Đang giao</span>';
-            break;
-          case 'completed':
-            $status = '<span class="status-badge bg-success text-white">✅ Đã giao</span>';
-            break;
-          case 'returned':
-            $status = '<span class="status-badge bg-secondary text-white">↩️ Trả hàng</span>';
-            break;
-          case 'canceled':
-            $status = '<span class="status-badge bg-danger text-white">❌ Đã hủy</span>';
-            break;
-          default:
-            $status = '<span class="status-badge bg-dark text-white">Không rõ</span>';
-        }
+        $status = match ($row['status']) {
+          "pending" => "<span class=\"status-badge bg-warning\">Chờ xác nhận</span>",
+          "processing" => "<span class=\"status-badge bg-info\">Đang xử lý</span>",
+          "shipping" => "<span class=\"status-badge bg-primary\">Đang giao</span>",
+          "completed" => "<span class=\"status-badge bg-success\">Đã giao</span>",
+          "cancelled" => "<span class=\"status-badge bg-danger\">Đã hủy</span>",
+          "returned" => "<span class=\"status-badge bg-secondary\">Trả hàng</span>",
+          default => "<span class=\"status-badge bg-dark\">Không rõ</span>",
+        };
         ?>
         <div class="order-card">
           <div class="order-header">
             <span>Đơn hàng #<?= $row['id'] ?></span>
-            <span><?= $status ?></span>
+            <?= $status ?>
           </div>
           <div class="order-body">
             <div class="info-item"><i class="fa fa-calendar"></i> Ngày đặt: <?= $order_date ?></div>
