@@ -173,3 +173,9 @@ h2 span {
   overflow-y: auto;
   overflow-x: hidden;
 }
+
+.table-dark tr th {
+  white-space: nowrap; /* Không xuống dòng */
+  overflow: hidden; /* Ẩn phần dư */
+  text-overflow: ellipsis; /* Hiện dấu ... */
+}

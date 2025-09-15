@@ -403,7 +403,7 @@ $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
                 <th>Giá</th>
                 <th>Số lượng</th>
                 <th>Ngày tạo</th>
-                <th>Hành động</th>
+                <th>Thao tác</th>
               </tr>
             </thead>
             <tbody>

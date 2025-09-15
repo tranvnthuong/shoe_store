@@ -9,11 +9,11 @@ if (!$user_id) {
 }
 
 // Lấy danh sách yêu cầu
-$sql = "SELECT n.*, u.full_name, u.email 
-        FROM nap_tien n 
-        JOIN users u ON n.user_id = u.id
+$sql = "SELECT d.*, u.full_name, u.email 
+        FROM deposit_requests d 
+        JOIN users u ON d.user_id = u.id
         WHERE u.id = ?
-        ORDER BY n.created_at DESC";
+        ORDER BY d.created_at DESC";
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id); // chỉ cần kiểu int cho user_id
@@ -41,7 +41,8 @@ $result = $stmt->get_result();
   <div class="container" style="padding-top: 80px;">
     <div class="d-flex justify-content-between">
       <h2>Lịch sử nạp</h2>
-      <a href="profile.php" class="btn btn-outline-primary mb-3"><i class="fa-solid fa-arrow-left"></i>Trang cá nhân</a>
+      <a href="profile.php" class="btn btn-outline-primary mb-3"><i class="fa-solid fa-arrow-left"></i>
+        Trang cá nhân</a>
     </div>
 
     <?php if (!empty($success)): ?>
@@ -53,7 +54,7 @@ $result = $stmt->get_result();
     <?php endif; ?>
 
     <table class="table table-bordered table-striped">
-      <thead>
+      <thead class="table-dark">
         <tr>
           <th>Mã giao dịch</th>
           <th>Số tiền</th>
@@ -65,11 +66,11 @@ $result = $stmt->get_result();
         <?php while ($row = $result->fetch_assoc()): ?>
           <tr>
             <td><?= $row['id'] ?></td>
-            <td><?= number_format($row['so_tien'], 0, ',', '.') ?> VND</td>
+            <td><?= number_format($row['amount'], 0, ',', '.') ?> VND</td>
             <td>
-              <?php if ($row['trang_thai'] == 'choduyet'): ?>
+              <?php if ($row['status'] == 'pending'): ?>
                 <span class="badge bg-warning">Chờ duyệt</span>
-              <?php elseif ($row['trang_thai'] == 'thanhcong'): ?>
+              <?php elseif ($row['status'] == 'success'): ?>
                 <span class="badge bg-success">Thành công</span>
               <?php else: ?>
                 <span class="badge bg-danger">Thất bại</span>

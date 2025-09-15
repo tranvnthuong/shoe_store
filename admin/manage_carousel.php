@@ -153,7 +153,7 @@ $list = $conn->query("SELECT * FROM carousel_home ORDER BY id DESC");
                                 <th>Ảnh</th>
                                 <th>Tiêu đề</th>
                                 <th>Nội dung</th>
-                                <th>Hành động</th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>

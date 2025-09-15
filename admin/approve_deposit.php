@@ -13,7 +13,7 @@ if (isset($_GET['approve'])) {
     $id = intval($_GET['approve']);
 
     // Lấy thông tin yêu cầu
-    $sql = "SELECT * FROM nap_tien WHERE id=? AND trang_thai='choduyet'";
+    $sql = "SELECT * FROM deposit_requests WHERE id=? AND status='pending'";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $id);
     $stmt->execute();
@@ -25,11 +25,11 @@ if (isset($_GET['approve'])) {
             // Cộng tiền cho user
             $sql = "UPDATE users SET balance = balance + ? WHERE id=?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("di", $deposit['so_tien'], $deposit['user_id']);
+            $stmt->bind_param("di", $deposit['amount'], $deposit['user_id']);
             $stmt->execute();
 
             // Đánh dấu đã duyệt
-            $sql = "UPDATE nap_tien SET trang_thai='thanhcong' WHERE id=?";
+            $sql = "UPDATE deposit_requests SET status='success' WHERE id=?";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("i", $id);
             $stmt->execute();
@@ -46,7 +46,7 @@ if (isset($_GET['approve'])) {
 // Hủy nạp
 if (isset($_GET['reject'])) {
     $id = intval($_GET['reject']);
-    $sql = "UPDATE nap_tien SET trang_thai='thatbai' WHERE id=? AND trang_thai='choduyet'";
+    $sql = "UPDATE deposit_requests SET status='failed' WHERE id=?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $id);
     $stmt->execute();
@@ -54,10 +54,12 @@ if (isset($_GET['reject'])) {
 }
 
 // Lấy danh sách yêu cầu
-$sql = "SELECT n.*, u.full_name, u.email 
-        FROM nap_tien n 
-        JOIN users u ON n.user_id = u.id 
-        ORDER BY n.created_at DESC";
+$sql = "SELECT d.*, u.full_name, u.email 
+        FROM deposit_requests d
+        JOIN users u ON d.user_id = u.id 
+        ORDER BY
+        (d.status = 'pending') DESC,
+        d.created_at DESC";
 $result = $conn->query($sql);
 ?>
 <!DOCTYPE html>
@@ -93,26 +95,24 @@ $result = $conn->query($sql);
                     <table class="table table-bordered table-striped">
                         <thead class="table-dark">
                             <tr>
-                                <th>ID</th>
-                                <th>Người dùng</th>
+                                <th>Tên khách hàng</th>
                                 <th>Email</th>
                                 <th>Số tiền</th>
                                 <th>Trạng thái</th>
                                 <th>Thời gian</th>
-                                <th>Hành động</th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php while ($row = $result->fetch_assoc()): ?>
                                 <tr>
-                                    <td><?= $row['id'] ?></td>
                                     <td><?= htmlspecialchars($row['full_name']) ?></td>
                                     <td><?= htmlspecialchars($row['email']) ?></td>
-                                    <td><?= number_format($row['so_tien'], 0, ',', '.') ?> VND</td>
+                                    <td><?= number_format($row['amount'], 0, ',', '.') ?> VND</td>
                                     <td>
-                                        <?php if ($row['trang_thai'] == 'choduyet'): ?>
+                                        <?php if ($row['status'] == 'pending'): ?>
                                             <span class="badge bg-warning">Chờ duyệt</span>
-                                        <?php elseif ($row['trang_thai'] == 'thanhcong'): ?>
+                                        <?php elseif ($row['status'] == 'success'): ?>
                                             <span class="badge bg-success">Thành công</span>
                                         <?php else: ?>
                                             <span class="badge bg-danger">Thất bại</span>
@@ -120,7 +120,7 @@ $result = $conn->query($sql);
                                     </td>
                                     <td><?= $row['created_at'] ?></td>
                                     <td>
-                                        <?php if ($row['trang_thai'] == 'choduyet'): ?>
+                                        <?php if ($row['status'] == 'pending'): ?>
                                             <a href="?approve=<?= $row['id'] ?>" class="btn btn-sm btn-success">✔ Duyệt</a>
                                             <a href="?reject=<?= $row['id'] ?>" class="btn btn-sm btn-danger">✘ Hủy</a>
                                         <?php else: ?>

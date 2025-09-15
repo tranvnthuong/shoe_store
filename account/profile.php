@@ -53,7 +53,7 @@ $success = "";
       </p>
       <p>
         <strong>Ngày sinh:</strong>
-        <span class="day_of_birth"> <?= $_SESSION['day_of_birth'] ?? "Chưa cập nhật"; ?></span>
+        <span class="day_of_birth"> <?= $_SESSION['day_of_birth'] ?? "(Chưa cập nhật)"; ?></span>
       </p>
       <p>
         <strong>Email:</strong>
@@ -65,15 +65,15 @@ $success = "";
       </p>
       <p>
         <strong>Số điện thoại:</strong>
-        <span class="phone"> <?= $_SESSION['phone'] ?? "Chưa cập nhật"; ?></span>
+        <span class="phone"> <?= $_SESSION['phone'] ?? "(Chưa cập nhật)"; ?></span>
       </p>
       <p>
         <strong>Địa chỉ:</strong>
-        <span class="address"> <?= $_SESSION['address'] ?? "Chưa cập nhật"; ?></span>
+        <span class="address"> <?= $_SESSION['address'] ?? "(Chưa cập nhật)"; ?></span>
       </p>
       <p>
         <strong>Ngày tham gia:</strong>
-        <span><?= $_SESSION['created_at'] ?? "Chưa cập nhật"; ?></span>
+        <span><?= $_SESSION['created_at'] ?></span>
       </p>
       <p>
         <strong>Vai trò:</strong>

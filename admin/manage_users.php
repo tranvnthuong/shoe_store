@@ -187,7 +187,7 @@ $result = $conn->query("SELECT * FROM users ORDER BY created_at DESC");
                 </div>
                 <div class="table-list-manage" style="max-height: 80vh;">
                     <table class="table table-bordered table-hover align-middle text-center">
-                        <thead class="table-dark sticky-top">
+                        <thead class="table-dark">
                             <tr>
                                 <th>Họ tên</th>
                                 <th>Email</th>
@@ -197,7 +197,7 @@ $result = $conn->query("SELECT * FROM users ORDER BY created_at DESC");
                                 <th>Điện thoại</th>
                                 <th>Quyền</th>
                                 <th>Ngày tạo</th>
-                                <th>Hành động</th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>

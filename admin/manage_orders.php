@@ -31,9 +31,11 @@ if (isset($_POST['update_status'])) {
 
 // Lấy danh sách đơn hàng
 $sql = "SELECT o.*, u.full_name, u.email 
-        FROM orders o 
+        FROM orders o
         JOIN users u ON o.user_id = u.id 
-        ORDER BY o.created_at DESC";
+        ORDER BY 
+        (o.status = 'pending') DESC,
+        o.created_at DESC";
 $result = $conn->query($sql);
 ?>
 <!DOCTYPE html>
@@ -60,7 +62,7 @@ $result = $conn->query($sql);
 
                 <div class="table-list-manage" style="max-height: 80vh;">
                     <table class="table table-bordered table-hover align-middle text-center">
-                        <thead class="table-dark sticky-top">
+                        <thead class="table-dark">
                             <tr>
                                 <th>ID</th>
                                 <th>Khách hàng</th>
@@ -74,7 +76,6 @@ $result = $conn->query($sql);
                         <tbody>
                             <?php while ($row = $result->fetch_assoc()): ?>
                                 <tr>
-
                                     <td><?= $row['id'] ?></td>
                                     <td><?= htmlspecialchars($row['full_name']) ?></td>
                                     <td><?= htmlspecialchars($row['email']) ?></td>

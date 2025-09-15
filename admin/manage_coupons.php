@@ -138,7 +138,7 @@ $result = $conn->query("SELECT * FROM coupons ORDER BY id DESC");
 
                 <div class="table-list-manage">
                     <table class="table table-bordered table-hover align-middle text-center">
-                        <thead class="table-dark sticky-top">
+                        <thead class="table-dark">
                             <tr>
                                 <th>Mã</th>
                                 <th>Giảm</th>

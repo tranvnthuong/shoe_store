@@ -126,7 +126,7 @@ if ($action == "deposit_money") {
             "msg" => "Số tiền nạp phải lớn hơn 0",
         ]);
     } else {
-        $sql = "INSERT INTO nap_tien (user_id, so_tien, trang_thai) VALUES (?, ?, 'choduyet')";
+        $sql = "INSERT INTO deposit_requests (user_id, amount, status) VALUES (?, ?, 'pending')";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ii", $user_id, $amount);
         if ($stmt->execute()) {
