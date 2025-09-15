@@ -1,4 +1,5 @@
 <?php
+include("../configs/db.php");
 session_start();
 
 // Kiểm tra quyền admin

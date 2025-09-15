@@ -1,5 +1,13 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
+
+$stmt = $conn->prepare("SELECT COUNT(status) AS pending_status_count FROM orders WHERE status = 'pending'");
+$stmt->execute();
+$orders_result = $stmt->get_result()->fetch_assoc();
+
+$stmt2 = $conn->prepare("SELECT COUNT(trang_thai) AS trang_thai_count FROM nap_tien WHERE trang_thai = 'choduyet'");
+$stmt2->execute();
+$naptien_result = $stmt2->get_result()->fetch_assoc();
 ?>
 <!-- Nút mở sidebar chỉ hiện trên mobile -->
 <button class="btn btn-primary d-md-none m-2" data-bs-toggle="offcanvas" data-bs-target="#sidebarMobile">

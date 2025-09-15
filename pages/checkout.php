@@ -141,6 +141,21 @@ if (isset($_POST['checkout'])) {
         $stmtBal->close();
       }
 
+      if (isset($_SESSION['coupon'])) {
+        $coupon_id = $_SESSION['coupon']['id'];
+
+        $stmt1 = $conn->prepare("UPDATE coupons SET quantity = quantity - 1 WHERE id = ? LIMIT 1");
+        $stmt1->bind_param("i", $coupon_id);
+        $stmt1->execute();
+        $stmt1->close();
+
+        $stmt2 = $conn->prepare("INSERT INTO coupon_usage (coupon_id, user_id) VALUES (?, ?)");
+        $stmt2->bind_param("ii", $coupon_id, $user_id);
+        $stmt2->execute();
+        $stmt2->close();
+      }
+
+
       $conn->commit();
 
       $msg = "

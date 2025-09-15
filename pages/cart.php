@@ -201,14 +201,14 @@ if (isset($_SESSION['coupon'])) {
           }
         }
 
-        // ✅ cập nhật tổng tiền nếu API trả về
         if (data.total) {
           $("#total").text(formatVND(data.total));
           $("#final_total").text(formatVND(data.total - (data
             .discount ?? 0)));
         }
 
-        if (data.discount && data.discount > 0) {
+        if (data.discount > 0) {
+          $("#discountText").removeClass("d-none");
           $("#discountText").html(`
                     Giảm giá: <span class="text-primary">-${formatVND(data.discount)}</span> (${data.coupon_code})
                 `);
@@ -259,9 +259,7 @@ if (isset($_SESSION['coupon'])) {
           success: (data) => {
             if (data.status === "success") {
               calculateTotal(data);
-              // ✅ cập nhật lại bảng giỏ hàng nếu có mảng items
               renderCartItem(data);
-
             }
           },
           error: (xhr, status, error) => {
@@ -306,7 +304,9 @@ if (isset($_SESSION['coupon'])) {
           },
           success: (data) => {
             showMessage(data);
-            calculateTotal(data);
+            if (data.status === "success") {
+              calculateTotal(data);
+            }
           },
           error: (xhr, status, error) => {
             Swal.fire({
@@ -337,8 +337,10 @@ if (isset($_SESSION['coupon'])) {
             btnLoader.showDefault();
           },
           success: (data) => {
-            calculateTotal(data);
-            renderCartItem(data);
+            if (data.status === "success") {
+              calculateTotal(data);
+              renderCartItem(data);
+            }
           },
           error: (xhr, status, error) => {
             Swal.fire({

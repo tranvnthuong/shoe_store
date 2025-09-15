@@ -4,53 +4,53 @@ include("../configs/db.php");
 
 // Chỉ cho admin truy cập
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header("Location: ../user/login.php");
-    exit;
+  header("Location: ../user/login.php");
+  exit;
 }
 
 // Duyệt nạp
 if (isset($_GET['approve'])) {
-    $id = intval($_GET['approve']);
+  $id = intval($_GET['approve']);
 
-    // Lấy thông tin yêu cầu
-    $sql = "SELECT * FROM nap_tien WHERE id=? AND trang_thai='choduyet'";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $deposit = $stmt->get_result()->fetch_assoc();
+  // Lấy thông tin yêu cầu
+  $sql = "SELECT * FROM nap_tien WHERE id=? AND trang_thai='choduyet'";
+  $stmt = $conn->prepare($sql);
+  $stmt->bind_param("i", $id);
+  $stmt->execute();
+  $deposit = $stmt->get_result()->fetch_assoc();
 
-    if ($deposit) {
-        $conn->begin_transaction();
-        try {
-            // Cộng tiền cho user
-            $sql = "UPDATE users SET balance = balance + ? WHERE id=?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("di", $deposit['so_tien'], $deposit['user_id']);
-            $stmt->execute();
+  if ($deposit) {
+    $conn->begin_transaction();
+    try {
+      // Cộng tiền cho user
+      $sql = "UPDATE users SET balance = balance + ? WHERE id=?";
+      $stmt = $conn->prepare($sql);
+      $stmt->bind_param("di", $deposit['so_tien'], $deposit['user_id']);
+      $stmt->execute();
 
-            // Đánh dấu đã duyệt
-            $sql = "UPDATE nap_tien SET trang_thai='thanhcong' WHERE id=?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
+      // Đánh dấu đã duyệt
+      $sql = "UPDATE nap_tien SET trang_thai='thanhcong' WHERE id=?";
+      $stmt = $conn->prepare($sql);
+      $stmt->bind_param("i", $id);
+      $stmt->execute();
 
-            $conn->commit();
-            $success = "Đã nạp";
-        } catch (Exception $e) {
-            $conn->rollback();
-            die("Lỗi khi duyệt nạp: " . $e->getMessage());
-        }
+      $conn->commit();
+      $success = "Đã nạp";
+    } catch (Exception $e) {
+      $conn->rollback();
+      die("Lỗi khi duyệt nạp: " . $e->getMessage());
     }
+  }
 }
 
 // Hủy nạp
 if (isset($_GET['reject'])) {
-    $id = intval($_GET['reject']);
-    $sql = "UPDATE nap_tien SET trang_thai='thatbai' WHERE id=? AND trang_thai='choduyet'";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $error = "Đã hủy đơn nạp";
+  $id = intval($_GET['reject']);
+  $sql = "UPDATE nap_tien SET trang_thai='thatbai' WHERE id=? AND trang_thai='choduyet'";
+  $stmt = $conn->prepare($sql);
+  $stmt->bind_param("i", $id);
+  $stmt->execute();
+  $error = "Đã hủy đơn nạp";
 }
 
 // Lấy danh sách yêu cầu
@@ -62,10 +62,11 @@ $result = $conn->query($sql);
 ?>
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
- <meta charset="UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Duyệt đơn nạp </title>
+    <title>Duyệt đơn nạp </title>
     <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
@@ -73,65 +74,68 @@ $result = $conn->query($sql);
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href="../assets/css/style.css" rel="stylesheet">
 </head>
+
 <body>
-     <div class="container-fluid">
-    <div class="row">
-      <?php include("../layout/admin_header.php") ?>
-      <main class="col-md-10 ms-sm-auto col-lg-10 px-md-4 content">
-  <h2>Quản lý yêu cầu nạp tiền</h2>
+    <div class="container-fluid">
+        <div class="row">
+            <?php include("../layout/admin_header.php") ?>
+            <main class="col-md-10 ms-sm-auto col-lg-10 px-md-4 content">
+                <h2>Duyệt yêu cầu nạp tiền</h2>
 
-  <?php if (!empty($success)): ?>
-    <div class="alert alert-success"><?= $success?></div>
-  <?php endif; ?>
+                <?php if (!empty($success)): ?>
+                <div class="alert alert-success"><?= $success ?></div>
+                <?php endif; ?>
 
-   <?php if (!empty($error)): ?>
-    <div class="alert alert-danger"><?= $error?></div>
-  <?php endif; ?>
-
-  <table class="table table-bordered table-striped">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Người dùng</th>
-        <th>Email</th>
-        <th>Số tiền</th>
-        <th>Trạng thái</th>
-        <th>Thời gian</th>
-        <th>Hành động</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php while($row = $result->fetch_assoc()): ?>
-        <tr>
-          <td><?= $row['id'] ?></td>
-          <td><?= htmlspecialchars($row['full_name']) ?></td>
-          <td><?= htmlspecialchars($row['email']) ?></td>
-          <td><?= number_format($row['so_tien'], 0, ',', '.') ?> VND</td>
-          <td>
-            <?php if ($row['trang_thai'] == 'choduyet'): ?>
-              <span class="badge bg-warning">Chờ duyệt</span>
-            <?php elseif ($row['trang_thai'] == 'thanhcong'): ?>
-              <span class="badge bg-success">Thành công</span>
-            <?php else: ?>
-              <span class="badge bg-danger">Thất bại</span>
-            <?php endif; ?>
-          </td>
-          <td><?= $row['created_at'] ?></td>
-          <td>
-            <?php if ($row['trang_thai'] == 'choduyet'): ?>
-              <a href="?approve=<?= $row['id'] ?>" class="btn btn-sm btn-success">✔ Duyệt</a>
-              <a href="?reject=<?= $row['id'] ?>" class="btn btn-sm btn-danger">✘ Hủy</a>
-            <?php else: ?>
-              <em>Đã xử lý</em>
-            <?php endif; ?>
-          </td>
-        </tr>
-      <?php endwhile; ?>
-    </tbody>
-  </table>
+                <?php if (!empty($error)): ?>
+                <div class="alert alert-danger"><?= $error ?></div>
+                <?php endif; ?>
+                <div class="table-list-manage" style="max-height: 85vh;">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Người dùng</th>
+                                <th>Email</th>
+                                <th>Số tiền</th>
+                                <th>Trạng thái</th>
+                                <th>Thời gian</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while ($row = $result->fetch_assoc()): ?>
+                            <tr>
+                                <td><?= $row['id'] ?></td>
+                                <td><?= htmlspecialchars($row['full_name']) ?></td>
+                                <td><?= htmlspecialchars($row['email']) ?></td>
+                                <td><?= number_format($row['so_tien'], 0, ',', '.') ?> VND</td>
+                                <td>
+                                    <?php if ($row['trang_thai'] == 'choduyet'): ?>
+                                    <span class="badge bg-warning">Chờ duyệt</span>
+                                    <?php elseif ($row['trang_thai'] == 'thanhcong'): ?>
+                                    <span class="badge bg-success">Thành công</span>
+                                    <?php else: ?>
+                                    <span class="badge bg-danger">Thất bại</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= $row['created_at'] ?></td>
+                                <td>
+                                    <?php if ($row['trang_thai'] == 'choduyet'): ?>
+                                    <a href="?approve=<?= $row['id'] ?>" class="btn btn-sm btn-success">✔ Duyệt</a>
+                                    <a href="?reject=<?= $row['id'] ?>" class="btn btn-sm btn-danger">✘ Hủy</a>
+                                    <?php else: ?>
+                                    <em>Đã xử lý</em>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                </div>
             </main>
-            </div>
-            </div>
-                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

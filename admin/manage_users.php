@@ -169,7 +169,7 @@ $result = $conn->query("SELECT * FROM users ORDER BY created_at DESC");
                     </div>
                 <?php endif; ?>
 
-                <h2 class="mb-4">👥 Quản lý tài khoản</h2>
+                <h2 class="mb-4">👥 Quản lý người dùng</h2>
 
                 <div class="mb-3 d-flex justify-content-end gap-2">
                     <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">

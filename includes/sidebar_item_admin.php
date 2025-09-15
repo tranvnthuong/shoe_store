@@ -12,6 +12,11 @@
  <a class="sidebar-link <?= (in_array($current_page, ['duyet_nap.php'])) ? 'active' : '' ?>" href="duyet_nap.php">
      <i class="fa fa-users"></i>
      <span>Duyệt nạp</span>
+     <?php if ($naptien_result['trang_thai_count'] > 0): ?>
+     <span class="badge rounded-pill bg-danger">
+         <?= $naptien_result['trang_thai_count'] ?>
+     </span>
+     <?php endif ?>
  </a>
  <a class="sidebar-link <?= (in_array($current_page, ['manage_products.php'])) ? 'active' : '' ?>"
      href="manage_products.php">
@@ -21,7 +26,12 @@
  <a class="sidebar-link <?= (in_array($current_page, ['manage_orders.php'])) ? 'active' : '' ?>"
      href="manage_orders.php">
      <i class="fa fa-cart-shopping"></i>
-     <span>Đơn hàng</span>
+     <span>Đơn đặt hàng</span>
+     <?php if ($orders_result['pending_status_count'] > 0): ?>
+     <span class="badge rounded-pill bg-danger">
+         <?= $orders_result['pending_status_count'] ?>
+     </span>
+     <?php endif ?>
  </a>
  <a class="sidebar-link <?= (in_array($current_page, ['manage_categories.php'])) ? 'active' : '' ?>"
      href="manage_categories.php">

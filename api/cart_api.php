@@ -175,17 +175,41 @@ if ($action == 'apply_coupon') {
     $coupon = $stmt->get_result()->fetch_assoc();
     if ($coupon) {
         $_SESSION['coupon'] = $coupon;
-        if (!empty($coupon['expiry'])) {
-            $expiry = strtotime($coupon['expiry']);
-            if ($expiry < time()) {
-                unset($_SESSION['coupon']);
-                echo json_encode([
-                    "status" => "error",
-                    "msg" => "Mã giảm giá này đã hết hạn",
-                    "isToast" => true
-                ]);
-                exit;
-            }
+        $expiry = strtotime($coupon['expiry']);
+        if ($expiry < time()) {
+            unset($_SESSION['coupon']);
+            echo json_encode([
+                "status" => "error",
+                "msg" => "Mã giảm giá này đã hết hạn",
+                "isToast" => true
+            ]);
+            exit;
+        }
+
+        if ($coupon['quantity'] <= 0) {
+            unset($_SESSION['coupon']);
+            echo json_encode([
+                "status" => "error",
+                "msg" => "Mã giảm giá này đã hết lượt dùng",
+                "isToast" => true
+            ]);
+            exit;
+        }
+
+        $coupon_id = $coupon['id'];
+        $stmt = $conn->prepare("SELECT COUNT(*) as used_count FROM coupon_usage WHERE coupon_id = ? AND user_id = ?");
+        $stmt->bind_param("ii", $coupon_id, $user_id);
+        $stmt->execute();
+        $coupon_usage = $stmt->get_result()->fetch_assoc();
+
+        if ($coupon_usage['used_count'] > $coupon['usage_limit']) {
+            unset($_SESSION['coupon']);
+            echo json_encode([
+                "status" => "error",
+                "msg" => "Bạn đã hết lượt sử dụng mã giảm giá này",
+                "isToast" => true
+            ]);
+            exit;
         }
 
         if (isset($_SESSION['coupon'])) { // nếu vẫn còn hợp lệ
@@ -202,12 +226,12 @@ if ($action == 'apply_coupon') {
                 "total" => $total,
                 "discount" => $discount,
                 "coupon_code" => $coupon_code,
-                "cart_count" => $cartCount
+                "cart_count" => $cartCount,
+                "isToast" => true
             ]);
             exit;
         }
     } else {
-        unset($_SESSION['coupon']);
         echo json_encode([
             "status" => "error",
             "msg" => "Mã giảm giá không hợp lệ",
@@ -227,13 +251,15 @@ if ($action == 'remove') {
     $total = 0;
     $discount = 0;
     updateCart();
+    $cartCount = getCartCount();
     echo json_encode([
         "status" => "success",
         "msg" => "Cập nhật thành công",
         "items" => $items,
         "total" => $total,
         "discount" => $discount,
-        "coupon_code" => $coupon_code
+        "coupon_code" => $coupon_code,
+        "cart_count" => $cartCount
     ]);
     exit;
 }
@@ -256,13 +282,15 @@ if ($action == "update") {
     $total = 0;
     $discount = 0;
     updateCart();
+    $cartCount = getCartCount();
     echo json_encode([
         "status" => "success",
         "msg" => "Cập nhật thành công",
         "items" => $items,      // danh sách sản phẩm
         "total" => $total,
         "discount" => $discount,
-        "coupon_code" => $coupon_code
+        "coupon_code" => $coupon_code,
+        "cart_count" => $cartCount
     ]);
     exit;
 }
