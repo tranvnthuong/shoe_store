@@ -2,6 +2,22 @@
 <?php
 $base_url = "/shoe_store";
 ?>
+<!--Start of Tawk.to Script-->
+<script type="text/javascript">
+    var Tawk_API = Tawk_API || {},
+        Tawk_LoadStart = new Date();
+    (function() {
+        var s1 = document.createElement("script"),
+            s0 = document.getElementsByTagName("script")[0];
+        s1.async = true;
+        s1.src = 'https://embed.tawk.to/68c86ac244a9c61928312d3a/1j57e22mf';
+        s1.charset = 'UTF-8';
+        s1.setAttribute('crossorigin', '*');
+        s0.parentNode.insertBefore(s1, s0);
+    })();
+</script>
+<!--End of Tawk.to Script-->
+
 <footer class="bg-dark text-light pt-5 pb-3 mt-5">
     <div class="container">
         <div class="row">
@@ -42,9 +58,3 @@ $base_url = "/shoe_store";
         <p class="text-center mb-0">&copy; 2025 Shoe Store - All rights reserved.</p>
     </div>
 </footer>
-
-<!-- Nút Zalo -->
-<a href="https://zalo.me/0965773279" target="_blank" class="btn btn-primary rounded-circle shadow position-fixed"
-    style="bottom: 80px; right: 20px; background-color: #0068FF; border:none; width:60px; height:60px; display:flex; align-items:center; justify-content:center; z-index:100;">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg" alt="Zalo" width="35">
-</a>
